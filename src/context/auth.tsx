@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { loginUser, logoutUser } from '@/services/userService';
 
 interface User {
+  user_id: number
   username: string;
   email: string;
   role: string;
@@ -27,18 +28,17 @@ function getSessionToken(): string | null {
 // Cria o AuthProvider que irá envolver a aplicação
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  // Inicia falso no servidor para evitar mismatch
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const login = async (email: string, password: string) => {
     console.log('login called in AuthContext');
     try {
       const data = await loginUser(email, password);
-      console.log(data)
 
       const userData = parseJwt(data.token);
       if (userData) {
         setUser({
+          user_id: userData.user_id,
           username: userData.username,
           email: userData.email,
           role: userData.role,
@@ -54,12 +54,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Função de logout que remove o token e limpa os dados do usuário
-  const logout = () => {
+  const logout = (showLogoutMessage = false) => {
     logoutUser();
     setUser(null);
     setIsAuthenticated(false);
+  
+    if (showLogoutMessage) {
+      localStorage.setItem('logout_reason', 'Você foi deslogado.');
+    }
   };
+  
 
   // Watch para verificar se o usuário já está autenticado ao carregar a aplicação
   useEffect(() => {
@@ -74,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = parseJwt(token);
       if (userData) {
         setUser({
+          user_id: userData.user_id,
           username: userData.username,
           email: userData.email,
           role: userData.role,
@@ -99,7 +104,7 @@ export const useAuth = () => {
 };
 
 // Função para decodificar o JWT e retornar os dados do usuário
-function parseJwt(token: string): any | null {
+function parseJwt(token: string): User | null {
   try {
     const base64Url = token.split('.')[1];
     let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');

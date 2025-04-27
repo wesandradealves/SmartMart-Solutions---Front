@@ -29,12 +29,12 @@ export const config = {
   matcher: [
     '/',
     '/home',
-    '/dashboard',
-    '/products/:path*',
-    '/categories/:path*',
-    '/sales/:path*',
-    '/users/:path*',
-    '/price-history/:path*',
+    '/dashboard/:path*',
+    // '/products/:path*',
+    // '/categories/:path*',
+    // '/sales/:path*',
+    // '/users/:path*',
+    // '/price-history/:path*',
     '/login', 
   ],
 };

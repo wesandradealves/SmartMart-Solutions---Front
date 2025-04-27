@@ -1,16 +1,19 @@
 'use client';
 
-import React from 'react';
 import { useAuthActions } from '@/hooks/useAuthActions';
 import { useRouter } from 'next/navigation';
 import { Form, Input, Button, Alert } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import Link from 'next/link';
+import { useMetadata } from '@/hooks/useMetadata';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const { loginUser, clearError, loading, error } = useAuthActions();
   const [form] = Form.useForm();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isLoggedOut = searchParams.get('logout') === '1';
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     const success = await loginUser(values.email, values.password);
@@ -19,16 +22,25 @@ export default function LoginPage() {
     }
   };
 
+  useMetadata({
+    title: 'SmartMart - Login',
+    ogTitle: 'SmartMart - Login'
+  });
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md bg-white p-8 shadow-md rounded-lg">
         <div className='flex flex-col gap-8'>
           <Link href="/">
-            <LazyLoadImage src='//apollosolutionsdev.com/wp-content/uploads/elementor/thumbs/Versoes-do-Logo-500-x-300-px-1-qrl9ms494iss53p1w0xld7l0bcqtcphompxo6f7zhk.png' className='m-auto' />
+            <LazyLoadImage src='/logo.png' className='m-auto' />
           </Link>
 
-          {error && (
-            <Alert message={error} type="error" showIcon />
+          {(error || isLoggedOut) && (
+            <Alert
+              message={error || "Você foi deslogado."}
+              type={error ? "error" : "warning"}
+              showIcon
+            />
           )}
 
           <Form

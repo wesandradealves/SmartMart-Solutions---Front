@@ -16,7 +16,6 @@ export const setupInterceptors = (setLoading: (loading: boolean) => void) => {
   api.interceptors.request.use(
     (config) => {
       setLoading(true);
-
       return config;
     },
     (error) => {

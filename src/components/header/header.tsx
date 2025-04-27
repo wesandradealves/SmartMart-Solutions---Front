@@ -2,7 +2,7 @@
 
 import React, { useEffect, useReducer } from 'react';
 import { useAuthActions } from '@/hooks/useAuthActions';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Layout, Button, Menu } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import Link from 'next/link';
@@ -16,6 +16,7 @@ const Header = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { isAuthenticated, logoutUser } = useAuthActions();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     dispatch({ type: 'SET_RENDERED' });
@@ -33,24 +34,43 @@ const Header = () => {
     }
   };
 
+  const getSelectedKey = () => {
+    if (pathname === '/') return '1';
+    if (pathname.startsWith('/dashboard/minha-conta')) return '2';
+    if (pathname === '/docs') return '3';
+    return '1';
+  };
+
   return (
-    <Sider  style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <AntHeader className="w-full px-2 py-4 h-screen overflow-auto gap-4 flex flex-col">
+    <Sider style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <AntHeader className="w-full px-2 py-4 h-screen overflow-auto gap-4 flex flex-col bg-white">
         <Link href="/">
-          <LazyLoadImage className="w-full" src="//apollosolutionsdev.com/wp-content/uploads/elementor/thumbs/Versoes-do-Logo-500-x-300-px-1-qrl9ms494iss53p1w0xld7l0bcqtcphompxo6f7zhk.png" />
+          <LazyLoadImage className="w-full" src="/logo.png" />
         </Link>
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']} items={[
-          {
-            key: '1',
-            icon: <DashboardOutlined />,
-            label: <Link href="/">Dashboard</Link>,
-          },
-          {
-            key: '2',
-            icon: <FileTextOutlined />,
-            label: <Link href="http://localhost:8000/docs">Documentação</Link>,
-          },
-        ]} />
+        <Menu
+          style={{ border: 'none' }}
+          theme="light"
+          className='bg-transparent'
+          mode="inline"
+          selectedKeys={[getSelectedKey()]}
+          items={[
+            {
+              key: '1',
+              icon: <DashboardOutlined />,
+              label: <Link href="/">Dashboard</Link>,
+            },
+            {
+              key: '2',
+              icon: <FileTextOutlined />,
+              label: <Link href="/dashboard/minha-conta">Minha Conta</Link>,
+            },
+            {
+              key: '3',
+              icon: <FileTextOutlined />,
+              label: <Link href="http://localhost:8000/docs">Documentação</Link>,
+            },
+          ]}
+        />
 
         {state.rendered && isAuthenticated && !state.isLoggingOut && (
           <Button className="rounded-none uppercase font-bold text-xs mt-auto" type="primary" danger onClick={handleLogout}>
