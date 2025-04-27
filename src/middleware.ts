@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Middleware para proteger rotas e redirecionar usuários não autenticados
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 

@@ -4,6 +4,10 @@ import { useAuth } from '@/context/auth';
 import { useState } from 'react';
 import axios from 'axios';
 
+/**
+ * Custom hook para gerenciar auth.
+ * @returns {Object} - Contains loginUser, logoutUser, loading, error, isAuthenticated, user, and clearError.
+ */
 export function useAuthActions() {
   const { login, logout, isAuthenticated, user } = useAuth();
   const [loading, setLoading] = useState(false);

@@ -5,16 +5,19 @@ interface LoginResponse {
   token: string;
 }
 
+/**
+ * Chama o endpoint de login no backend e retorna a resposta do servidor.
+ * O token é armazenado em um cookie HttpOnly.
+ * @param {string} identifier - E-mail ou nome de usuário.
+ * @param {string} password - Senha do usuário.
+ * @returns {Promise<LoginResponse>} - Resposta da API com mensagem e token.
+ */
 export const loginUser = async (identifier: string, password: string): Promise<LoginResponse> => {
-  // Determina se o identificador é um e-mail ou nome de usuário
   const loginData = identifier.includes('@')
     ? { email: identifier, password }
     : { username: identifier, password };
-  console.log('Attempting login via userService with:', loginData);
-  console.log('Target URL:', api.defaults.baseURL + '/users/login'); // Log URL completa
   try {
     const response = await api.post<LoginResponse>('/users/login', loginData);
-    console.log('Login API Response:', response);
     
     if (typeof window !== 'undefined') {
       document.cookie = `session_token=${response.data.token}; path=/; max-age=3600;`;
@@ -31,10 +34,8 @@ export const loginUser = async (identifier: string, password: string): Promise<L
  * Remove o token e dados do usuário localmente.
  */
 export const logoutUser = async (): Promise<string> => {
-  // Chama endpoint para remover cookie HttpOnly e obter mensagem
   const response = await api.post<{ message: string }>('/users/logout');
   if (typeof window !== 'undefined') {
-    // Limpa dados locais
     localStorage.removeItem('user');
   }
   return response.data.message;

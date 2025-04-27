@@ -24,6 +24,7 @@ function getSessionToken(): string | null {
   return match ? match[2] : null;
 }
 
+// Cria o AuthProvider que irá envolver a aplicação
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   // Inicia falso no servidor para evitar mismatch
@@ -53,12 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Função de logout que remove o token e limpa os dados do usuário
   const logout = () => {
     logoutUser();
     setUser(null);
     setIsAuthenticated(false);
   };
 
+  // Watch para verificar se o usuário já está autenticado ao carregar a aplicação
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -95,6 +98,7 @@ export const useAuth = () => {
   return context;
 };
 
+// Função para decodificar o JWT e retornar os dados do usuário
 function parseJwt(token: string): any | null {
   try {
     const base64Url = token.split('.')[1];
