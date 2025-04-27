@@ -76,7 +76,7 @@ export const GlobalStyle = createGlobalStyle `
         font-optical-sizing: auto;
         font-style: normal;
         overflow-x: hidden;
-        min-width: ${props => props.theme._breakpoints.sm};
+        min-width: 360px;
         font-size: ${pxToRem(16)};
         * { 
             transition: 30ms ease-in-out all;
