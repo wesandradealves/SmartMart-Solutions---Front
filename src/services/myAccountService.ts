@@ -21,8 +21,6 @@ interface UpdateUserRequest {
  */
 export const updateMyAccount = async (userId: number, userData: UpdateUserRequest): Promise<UserResponse> => {
     try {
-        console.log('Dados recebidos para atualização:', userData);
-
         const filteredData = Object.fromEntries(
             Object.entries(userData).filter(([, value]) => value !== undefined)
         );

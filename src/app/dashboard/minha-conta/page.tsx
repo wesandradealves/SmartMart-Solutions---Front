@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 
 const updateUserSchema = z.object({
   email: z.string().email().optional(),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres!').optional(),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres!').nonempty('A senha é obrigatória!').optional(),
 });
 
 type UpdateUserFormData = z.infer<typeof updateUserSchema>;
@@ -54,7 +54,6 @@ export default function MyAccount() {
     } catch (error) {
       console.error('Erro ao atualizar dados do usuário:', error);
     }
-    
   };
 
   return (
@@ -92,7 +91,7 @@ export default function MyAccount() {
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">Atualizar</Button>
+        <Button className='rounded-none bg-green-500' type="primary" htmlType="submit">Atualizar</Button>
       </Form.Item>
     </Form>
   );

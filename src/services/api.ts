@@ -16,7 +16,6 @@ export const setupInterceptors = (setLoading: (loading: boolean) => void) => {
   api.interceptors.request.use(
     (config) => {
       setLoading(true);
-      console.log('loading')
       return config;
     },
     (error) => {
@@ -28,7 +27,6 @@ export const setupInterceptors = (setLoading: (loading: boolean) => void) => {
   api.interceptors.response.use(
     (response) => {
       setLoading(false);
-      console.log('!loading')
       return response;
     },
     (error) => {
