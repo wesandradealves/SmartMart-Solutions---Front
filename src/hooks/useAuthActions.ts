@@ -2,13 +2,13 @@
 
 import { useAuth } from '@/context/auth';
 import { useState } from 'react';
+import axios from 'axios';
 
 export function useAuthActions() {
   const { login, logout, isAuthenticated, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Retorna true se login bem-sucedido, false caso contrário
   const loginUser = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
     setError(null);
@@ -16,9 +16,15 @@ export function useAuthActions() {
     try {
       await login(email, password);
       success = true;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError('Usuário ou senha inválidos');
+      if (axios.isAxiosError(err) && err.response) {
+        // FastAPI retorna detail ou message
+        const msg = (err.response.data as any).detail || (err.response.data as any).message;
+        setError(msg ?? 'Falha no login');
+      } else {
+        setError('Usuário ou senha inválidos');
+      }
     } finally {
       setLoading(false);
     }

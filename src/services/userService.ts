@@ -31,9 +31,10 @@ export const loginUser = async (identifier: string, password: string): Promise<L
  * Remove o token e dados do usuário localmente.
  */
 export const logoutUser = async (): Promise<string> => {
+  // Chama endpoint para remover cookie HttpOnly e obter mensagem
   const response = await api.post<{ message: string }>('/users/logout');
-  // O backend deve remover o cookie HttpOnly na resposta
   if (typeof window !== 'undefined') {
+    // Limpa dados locais
     localStorage.removeItem('user');
   }
   return response.data.message;
