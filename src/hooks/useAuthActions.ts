@@ -19,7 +19,6 @@ export function useAuthActions() {
     } catch (err: unknown) {
       console.error(err);
       if (axios.isAxiosError(err) && err.response) {
-        // FastAPI retorna detail ou message
         const msg = (err.response.data as any).detail || (err.response.data as any).message;
         setError(msg ?? 'Falha no login');
       } else {
