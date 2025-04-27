@@ -67,7 +67,7 @@ const Header = () => {
             {
               key: '3',
               icon: <FileTextOutlined />,
-              label: <Link href="/docs">Documentação</Link>,
+              label: <Link href="http://localhost:8000/docs">Documentação</Link>,
             },
           ]}
         />
