@@ -1,3 +1,5 @@
+// Pre carrego estilos do styled-components
+
 'use client'
  
 import React, { useState } from 'react'

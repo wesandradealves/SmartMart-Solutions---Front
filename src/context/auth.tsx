@@ -1,45 +1,90 @@
+'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-// import { Login } from '@/services/userService';
-import { Login } from '@/services/userService';
+import { loginUser, logoutUser } from '@/services/userService';
+
+interface User {
+  username: string;
+  email: string;
+  role: string;
+}
 
 interface AuthContextProps {
-  token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
-  login: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// Função para obter o valor do cookie session_token
+function getSessionToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^|; )' + 'session_token' + '=([^;]+)'));
+  return match ? match[2] : null;
+}
 
-  const login = async () => {
+// Cria o AuthProvider que irá envolver a aplicação
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  // Inicia falso no servidor para evitar mismatch
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  const login = async (email: string, password: string) => {
+    console.log('login called in AuthContext');
     try {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        setToken(storedToken);
-        setIsAuthenticated(true);
-        return;
+      const data = await loginUser(email, password);
+      console.log(data)
+
+      const userData = parseJwt(data.token);
+      if (userData) {
+        setUser({
+          username: userData.username,
+          email: userData.email,
+          role: userData.role,
+        });
+        localStorage.setItem('user', JSON.stringify(userData));
       }
 
-      const data = await Login(process.env.NEXT_PUBLIC_API_USERNAME || '', process.env.NEXT_PUBLIC_API_PWD || '');
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
       setIsAuthenticated(true);
-      console.info(`✅ Você está logado como ${data.user_display_name} (${data.user_email})`);
     } catch (error: unknown) {
-      console.error('❌ Login Error:', error);
+      console.error('Login Error:', error);
       setIsAuthenticated(false);
+      throw error;  
     }
   };
 
+  // Função de logout que remove o token e limpa os dados do usuário
+  const logout = () => {
+    logoutUser();
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  // Watch para verificar se o usuário já está autenticado ao carregar a aplicação
   useEffect(() => {
-    login();
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+      return;
+    }
+    const token = getSessionToken();
+    if (token) {
+      const userData = parseJwt(token);
+      if (userData) {
+        setUser({
+          username: userData.username,
+          email: userData.email,
+          role: userData.role,
+        });
+        setIsAuthenticated(true);
+      }
+    }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated, login }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -52,3 +97,26 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Função para decodificar o JWT e retornar os dados do usuário
+function parseJwt(token: string): any | null {
+  try {
+    const base64Url = token.split('.')[1];
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = base64.length % 4;
+    if (pad) {
+      base64 += '='.repeat(4 - pad);
+    }
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Failed to parse JWT', error);
+    return null;
+  }
+}

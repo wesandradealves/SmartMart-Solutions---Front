@@ -10,19 +10,14 @@ const theme = {
 };
 import { App, GlobalStyle } from '@/app/style';
 import '@/assets/scss/globals.scss';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import { AnimatePresence, motion, useScroll } from 'motion/react';
+import 'antd/dist/reset.css';
+import { AnimatePresence, motion } from 'motion/react';
 import { ThemeProvider } from 'styled-components';
 import StyledJsxRegistry from './registry';
-import { Suspense, useRef, useState, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import classNames from 'classnames';
-// import Header from '@/components/header/header';
-// import Footer from '@/components/footer/footer';
-// import { MediaProvider } from '@/context/media';
-// import { AuthProvider } from '@/context/auth';
+import { AuthProvider } from '@/context/auth';
 import { LoaderProvider, useLoader } from '@/context/spinner';
-// import { SettingsProvider } from '@/context/settings';
 import { setupInterceptors } from '@/services/api';
 import Spinner from '@/components/spinner/spinner';
 
@@ -31,19 +26,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const scrollRef = useRef<HTMLHtmlElement | null>(null);
-  const { scrollY } = useScroll({
-    container: scrollRef,
-  });
-
-  const [scrollPosition, setScrollPosition] = useState<number>(0);
-
-  scrollY.onChange((n) => {
-    setScrollPosition(n);
-  });
-
   return (
-    <html lang="pt-br" ref={scrollRef}>
+    <html lang="pt-br" className="scroll-smooth">
       <body
         suppressHydrationWarning={true}
         className={classNames(
@@ -67,35 +51,29 @@ export default function RootLayout({
         <ThemeProvider theme={theme}>
           <LoaderProvider>
             <LoaderSetup />
-            {/* <AuthProvider> */}
-              {/* <MediaProvider> */}
-                {/* <SettingsProvider> */}
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <StyledJsxRegistry>
-                      <AnimatePresence
-                        mode="wait"
-                        initial={true}
-                        onExitComplete={() => window.scrollTo(0, 0)}
+            <AuthProvider>
+              <Suspense fallback={<div>Loading...</div>}>
+                <StyledJsxRegistry>
+                  <AnimatePresence
+                    mode="wait"
+                    initial={true}
+                    onExitComplete={() => window.scrollTo(0, 0)}
+                  >
+                    <App id="primary">
+                      <motion.div
+                        className="min-h-screen flex flex-start flex-col"
+                        initial={{ x: 0, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: 0, opacity: 0 }}
                       >
-                        <App id="primary">
-                          <motion.div
-                            className="min-h-screen flex flex-start flex-col"
-                            initial={{ x: 0, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: 0, opacity: 0 }}
-                          >
-                            {/* <Header scrollPosition={scrollPosition} /> */}
-                            {children}
-                            {/* <Footer /> */}
-                          </motion.div>
-                          <Spinner />
-                        </App>
-                      </AnimatePresence>
-                    </StyledJsxRegistry>
-                  </Suspense>
-                {/* </SettingsProvider> */}
-              {/* </MediaProvider> */}
-            {/* </AuthProvider> */}
+                        {children}
+                      </motion.div>
+                      <Spinner />
+                    </App>
+                  </AnimatePresence>
+                </StyledJsxRegistry>
+              </Suspense>
+            </AuthProvider>
           </LoaderProvider>
           <GlobalStyle />
         </ThemeProvider>

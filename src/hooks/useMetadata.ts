@@ -9,6 +9,16 @@ interface MetadataOptions {
   favicon?: string;
 }
 
+/**
+ * Hook para gerenciar metadados da página.
+ * @param {Object} options - Opções de metadados.
+ * @param {string} options.title - Título da página.
+ * @param {string} options.description - Descrição da página.
+ * @param {string} options.keywords - Palavras-chave da página.
+ * @param {string} options.ogTitle - Título Open Graph.
+ * @param {string} options.ogImage - Imagem Open Graph.
+ * @param {string} options.favicon - URL do favicon.
+ */
 export function useMetadata({
   title,
   description,

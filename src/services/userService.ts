@@ -1,41 +1,42 @@
- 
 import api from './api';
 
-interface ApiError {
-  response?: {
-    data?: unknown;
-  };
+interface LoginResponse {
+  message: string;
+  token: string;
 }
 
-// Login 
-
-export const Login = async (username: string, password: string) => {
+/**
+ * Chama o endpoint de login no backend e retorna a resposta do servidor.
+ * O token é armazenado em um cookie HttpOnly.
+ * @param {string} identifier - E-mail ou nome de usuário.
+ * @param {string} password - Senha do usuário.
+ * @returns {Promise<LoginResponse>} - Resposta da API com mensagem e token.
+ */
+export const loginUser = async (identifier: string, password: string): Promise<LoginResponse> => {
+  const loginData = identifier.includes('@')
+    ? { email: identifier, password }
+    : { username: identifier, password };
   try {
-    const response = await api.post('/jwt-auth/v1/token', {
-      username,
-      password,
-    });
-    localStorage.setItem('token', response.data.token);
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof Error && 'response' in error) {
-      const apiError = error as ApiError;
-      console.error('Login Error:', apiError.response?.data || error.message);
-    } else {
-      console.error('Login Error:', error);
+    const response = await api.post<LoginResponse>('/users/login', loginData);
+    
+    if (typeof window !== 'undefined') {
+      document.cookie = `session_token=${response.data.token}; path=/; max-age=3600;`;
     }
-    throw error;
+    return response.data;
+  } catch (error) {
+    console.error('Error during login API call:', error);
+    throw error; 
   }
 };
 
-// Get User
-
-export const getUser = async (id: number = 1) => {
-  try {
-    const response = await api.get(`/wp/v2/users/${id}?context=view`);
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
-    throw error;
+/**
+ * Chama o endpoint de logout no backend e retorna a mensagem do servidor.
+ * Remove o token e dados do usuário localmente.
+ */
+export const logoutUser = async (): Promise<string> => {
+  const response = await api.post<{ message: string }>('/users/logout');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user');
   }
+  return response.data.message;
 };
