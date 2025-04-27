@@ -9,7 +9,7 @@ const { Footer: AntFooter } = Layout;
 
 const Footer = () => {
   return (
-    <AntFooter className="flex bg-gray-300 p-0 -m-4 px-8 py-[.89rem] items-center justify-end">
+    <AntFooter className="flex bg-gray-300 p-0 -m-4 px-8 py-5 items-center justify-end">
       <Copyright>Desenvolvido por <Link target="blank" href="https://github.com/wesandradealves">Wesley Alves</Link></Copyright>
     </AntFooter>
   );
