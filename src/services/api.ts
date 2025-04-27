@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,  // envia cookies (session_token)
+  withCredentials: true,  
 });
 
 console.log('Effective API Base URL:', api.defaults.baseURL);
@@ -24,15 +24,6 @@ export const setupInterceptors = (setLoading: (loading: boolean) => void) => {
   api.interceptors.request.use(
     (config) => {
       setLoading(true);
-
-      // // Não adicionar Authorization header na rota de login
-      // if (config.url !== '/users/login') {
-      //   const token = getSessionToken(); 
-        
-      //   if (token) {
-      //     config.headers.Authorization = `Bearer ${token}`;
-      //   }
-      // }
 
       return config;
     },
