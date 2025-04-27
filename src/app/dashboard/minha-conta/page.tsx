@@ -84,6 +84,7 @@ export default function MyAccount() {
           render={({ field }) => (
             <Input.Password
               {...field} 
+              required={true}
               placeholder="Digite sua senha"
             />
           )}
