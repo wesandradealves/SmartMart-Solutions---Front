@@ -100,7 +100,6 @@ export const useAuth = () => {
 };
 
 // Função para decodificar o JWT e retornar os dados do usuário
-// function parseJwt(token: string): any | null {
 function parseJwt(token: string): User | null {
   try {
     const base64Url = token.split('.')[1];
