@@ -2,6 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+- Frontend [https://github.com/wesandradealves/SmartMart-Solutions---Front](https://github.com/wesandradealves/SmartMart-Solutions---Front) 
+
+- Backend [https://github.com/wesandradealves/SmartMart-Solutions](https://github.com/wesandradealves/SmartMart-Solutions) 
+
 First, run the development server:
 
 ```bash
