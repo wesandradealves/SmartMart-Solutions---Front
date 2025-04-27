@@ -10,8 +10,8 @@ const theme = {
 };
 import { App, GlobalStyle } from '@/app/style';
 import '@/assets/scss/globals.scss';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+// import 'slick-carousel/slick/slick.css';
+// import 'slick-carousel/slick/slick-theme.css';
 import { AnimatePresence, motion, useScroll } from 'motion/react';
 import { ThemeProvider } from 'styled-components';
 import StyledJsxRegistry from './registry';
@@ -19,10 +19,8 @@ import { Suspense, useRef, useState, useEffect } from 'react';
 import classNames from 'classnames';
 // import Header from '@/components/header/header';
 // import Footer from '@/components/footer/footer';
-// import { MediaProvider } from '@/context/media';
-// import { AuthProvider } from '@/context/auth';
+import { AuthProvider } from '@/context/auth';
 import { LoaderProvider, useLoader } from '@/context/spinner';
-// import { SettingsProvider } from '@/context/settings';
 import { setupInterceptors } from '@/services/api';
 import Spinner from '@/components/spinner/spinner';
 
@@ -32,15 +30,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const scrollRef = useRef<HTMLHtmlElement | null>(null);
-  const { scrollY } = useScroll({
-    container: scrollRef,
-  });
+  // const { scrollY } = useScroll({
+  //   container: scrollRef,
+  // });
 
-  const [scrollPosition, setScrollPosition] = useState<number>(0);
+  // const [scrollPosition, setScrollPosition] = useState<number>(0);
 
-  scrollY.onChange((n) => {
-    setScrollPosition(n);
-  });
+  // scrollY.onChange((n) => {
+  //   setScrollPosition(n);
+  // });
 
   return (
     <html lang="pt-br" ref={scrollRef}>
@@ -67,7 +65,7 @@ export default function RootLayout({
         <ThemeProvider theme={theme}>
           <LoaderProvider>
             <LoaderSetup />
-            {/* <AuthProvider> */}
+            <AuthProvider>
               {/* <MediaProvider> */}
                 {/* <SettingsProvider> */}
                   <Suspense fallback={<div>Loading...</div>}>
@@ -84,7 +82,7 @@ export default function RootLayout({
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: 0, opacity: 0 }}
                           >
-                            {/* <Header scrollPosition={scrollPosition} /> */}
+                            {/* <Header  /> */}
                             {children}
                             {/* <Footer /> */}
                           </motion.div>
@@ -95,7 +93,7 @@ export default function RootLayout({
                   </Suspense>
                 {/* </SettingsProvider> */}
               {/* </MediaProvider> */}
-            {/* </AuthProvider> */}
+            </AuthProvider>
           </LoaderProvider>
           <GlobalStyle />
         </ThemeProvider>

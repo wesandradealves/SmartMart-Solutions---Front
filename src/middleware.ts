@@ -2,15 +2,22 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const sessionToken = request.cookies.get('session_token')?.value;
-
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL('/', request.url));
+  // ✅ Se estiver tentando acessar /login, deixa passar
+  if (pathname.startsWith('/login')) {
+    return NextResponse.next();
   }
 
-  if (!sessionToken && pathname !== '/login') {
+  // ✅ Se estiver na raíz '/', redireciona pra /home
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  const sessionToken = request.cookies.get('session_token')?.value;
+
+  // ✅ Se não tiver token em qualquer outra rota protegida, manda para login
+  if (!sessionToken) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
@@ -19,13 +26,14 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/',       
-    '/home',    
-    '/dashboard',   
+    '/',
+    '/home',
+    '/dashboard',
     '/products/:path*',
     '/categories/:path*',
     '/sales/:path*',
     '/users/:path*',
     '/price-history/:path*',
+    '/login', 
   ],
 };
