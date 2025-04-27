@@ -59,7 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // ao montar no cliente, checa cookie e popula usuário
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+      return;
+    }
     const token = getSessionToken();
     if (token) {
       const userData = parseJwt(token);
@@ -92,7 +97,6 @@ export const useAuth = () => {
 function parseJwt(token: string): any | null {
   try {
     const base64Url = token.split('.')[1];
-    // Substitui caracteres de URL-safe e adiciona padding
     let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const pad = base64.length % 4;
     if (pad) {
