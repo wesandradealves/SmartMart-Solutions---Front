@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const login = async (email: string, password: string) => {
-    console.log('login called in AuthContext'); // <-- Adicionar log aqui
+    console.log('login called in AuthContext');
     try {
       const data = await loginUser(email, password);
       console.log(data)
@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: unknown) {
       console.error('Login Error:', error);
       setIsAuthenticated(false);
+      throw error;  
     }
   };
 

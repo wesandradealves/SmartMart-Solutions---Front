@@ -17,12 +17,19 @@ export function useAuthActions() {
       await login(email, password);
       success = true;
     } catch (err: unknown) {
-      console.error(err);
-      if (axios.isAxiosError(err) && err.response) {
-        const msg = (err.response.data as any).detail || (err.response.data as any).message;
-        setError(msg ?? 'Falha no login');
+      console.error("error", err);
+      if (axios.isAxiosError(err)) {
+        if (err.code === 'ERR_NETWORK') {
+          setError('Falha de rede. Verifique sua conexão.');
+        } else if (err.response) {
+          const data = err.response.data as any;
+          const msg = data.detail || data.message;
+          setError(msg ?? 'Falha no login');
+        } else {
+          setError('Erro desconhecido. Tente novamente.');
+        }
       } else {
-        setError('Usuário ou senha inválidos');
+        setError('Erro desconhecido. Tente novamente.');
       }
     } finally {
       setLoading(false);
@@ -34,5 +41,9 @@ export function useAuthActions() {
     logout();
   };
 
-  return { loginUser, logoutUser, loading, error, isAuthenticated, user };
+  const clearError = () => {
+    setError(null);
+  };
+
+  return { loginUser, logoutUser, loading, error, isAuthenticated, user, clearError };
 }

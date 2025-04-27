@@ -2,7 +2,7 @@
 
 // import { Page, PageService } from '../services/pageService';
 // import { usePathname } from 'next/navigation';
-// import { useMetadata } from "@/hooks/useMetadata";
+import { useMetadata } from "@/hooks/useMetadata";
 // import { useEffect, useState, useCallback, useMemo } from 'react';
 // import { useSettings } from '@/context/settings';
 // import { ContentService } from '@/services/ContentService';
@@ -50,11 +50,10 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
   // const title = useMemo(() => (page?.title?.rendered ? ` - ${page.title.rendered}` : ''), [page]);
 
-  // useMetadata({
-  //   title: `${settings?.blog_info.name ?? 'BDM Digital'}${title}`,
-  //   ogTitle: `${settings?.blog_info.name ?? 'BDM Digital'}${title}`,
-  //   favicon: settings?.favicon,
-  // });
+  useMetadata({
+    title: `SmartMart`,
+    ogTitle: `SmartMart`
+  });
 
   return (
     <main className='flex-1'>
