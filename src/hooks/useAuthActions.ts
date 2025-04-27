@@ -5,6 +5,14 @@ import { useState } from 'react';
 import axios from 'axios';
 
 /**
+ * Interface para a resposta de erro da API
+ */
+interface ErrorResponse {
+  detail?: string;
+  message?: string;
+}
+
+/**
  * Custom hook para gerenciar auth.
  * @returns {Object} - Contains loginUser, logoutUser, loading, error, isAuthenticated, user, and clearError.
  */
@@ -26,7 +34,7 @@ export function useAuthActions() {
         if (err.code === 'ERR_NETWORK') {
           setError('Falha de rede. Verifique sua conexão.');
         } else if (err.response) {
-          const data = err.response.data as any;
+          const data = err.response.data as ErrorResponse;
           const msg = data.detail || data.message;
           setError(msg ?? 'Falha no login');
         } else {

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useReducer } from 'react';
 import { useAuthActions } from '@/hooks/useAuthActions';
@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Layout, Button, Menu } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import Link from 'next/link';
-import { DashboardOutlined, FileTextOutlined } from '@ant-design/icons';
+import { DashboardOutlined, FileTextOutlined, AppstoreOutlined } from '@ant-design/icons';
 import Sider from 'antd/es/layout/Sider';
 import { initialState, reducer } from './reducer';
 
@@ -35,10 +35,15 @@ const Header = () => {
   };
 
   const getSelectedKey = () => {
-    if (pathname === '/') return '1';
-    if (pathname.startsWith('/dashboard/minha-conta')) return '2';
-    if (pathname === '/docs') return '3';
-    return '1';
+    const routeToKeyMap: Record<string, string> = {
+      '/': '1',
+      '/dashboard/minha-conta': '2',
+      '/dashboard/categorias': '3',
+      '/dashboard/categorias/': '3', 
+      'http://localhost:8000/docs': '4', 
+    };
+
+    return routeToKeyMap[pathname] || '1';
   };
 
   return (
@@ -66,6 +71,11 @@ const Header = () => {
             },
             {
               key: '3',
+              icon: <AppstoreOutlined />,
+              label: <Link href="/dashboard/categorias">Categorias</Link>,
+            },
+            {
+              key: '4',
               icon: <FileTextOutlined />,
               label: <Link href="http://localhost:8000/docs">Documentação</Link>,
             },

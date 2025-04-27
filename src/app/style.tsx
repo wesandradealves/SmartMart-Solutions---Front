@@ -133,3 +133,6 @@ export const GlobalStyle = createGlobalStyle `
 
 export const App = styled.div `
 `;
+
+export const PageTitle = styled.h2 `
+`;

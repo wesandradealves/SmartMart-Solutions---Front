@@ -13,7 +13,7 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
       <Header />
 
       <Layout className='bg-gray-100 p-4'>
-        <Content className='flex flex-col flex-wrap justify-between'>
+        <Content className='flex flex-col flex-wrap'>
           {children}
           <Footer />
         </Content>
