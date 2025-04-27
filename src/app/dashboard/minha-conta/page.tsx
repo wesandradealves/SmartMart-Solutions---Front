@@ -2,13 +2,14 @@
 
 import { useAuth } from '@/context/auth';
 import { useMetadata } from '@/hooks/useMetadata';
-import { useForm, Controller } from 'react-hook-form'; 
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { updateMyAccount } from '@/services/myAccountService';
 import { useEffect } from 'react';
 import { Form, Input, Button } from 'antd';
 import { useRouter } from 'next/navigation';
+import { PageTitle } from '@/app/style';
 
 const updateUserSchema = z.object({
   email: z.string().email().optional(),
@@ -41,14 +42,14 @@ export default function MyAccount() {
 
     const sanitizedData = {
       ...data,
-      password: data.password || "", 
+      password: data.password || "",
     };
 
     try {
       await updateMyAccount(user.user_id, sanitizedData);
-    
+
       if ((sanitizedData.email && sanitizedData.email !== user.email) || sanitizedData.password) {
-        await logout(); 
+        await logout();
         router.push('/login?logout=1');
       }
     } catch (error) {
@@ -57,43 +58,46 @@ export default function MyAccount() {
   };
 
   return (
-    <Form
-      layout="vertical"
-      onFinish={handleSubmit(onSubmit)} 
-    >
-      <Form.Item
-        label="E-mail"
-        name="email"
-        initialValue={user?.email}
-        rules={[{ type: 'email', message: 'Por favor, insira um e-mail válido!' }]}
-        validateStatus={errors.email ? 'error' : ''}
-        help={errors.email ? errors.email.message : ''}
+    <>
+      <PageTitle className='mb-4 font-bold text-2xl'>Minha Conta</PageTitle>
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit(onSubmit)}
       >
-        <Input {...control.register('email')} placeholder="Digite seu e-mail" />
-      </Form.Item>
+        <Form.Item
+          label="E-mail"
+          name="email"
+          initialValue={user?.email}
+          rules={[{ type: 'email', message: 'Por favor, insira um e-mail válido!' }]}
+          validateStatus={errors.email ? 'error' : ''}
+          help={errors.email ? errors.email.message : ''}
+        >
+          <Input {...control.register('email')} placeholder="Digite seu e-mail" />
+        </Form.Item>
 
-      <Form.Item
-        label="Senha"
-        name="password"
-        validateStatus={errors.password ? 'error' : ''}
-        help={errors.password ? errors.password.message : ''}
-      >
-        <Controller
-          control={control}
+        <Form.Item
+          label="Senha"
           name="password"
-          render={({ field }) => (
-            <Input.Password
-              {...field} 
-              required={true}
-              placeholder="Digite sua senha"
-            />
-          )}
-        />
-      </Form.Item>
+          validateStatus={errors.password ? 'error' : ''}
+          help={errors.password ? errors.password.message : ''}
+        >
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <Input.Password
+                {...field}
+                required={true}
+                placeholder="Digite sua senha"
+              />
+            )}
+          />
+        </Form.Item>
 
-      <Form.Item>
-        <Button className='rounded-none bg-green-500' type="primary" htmlType="submit">Atualizar</Button>
-      </Form.Item>
-    </Form>
+        <Form.Item>
+          <Button className='rounded-none bg-green-500' type="primary" htmlType="submit">Atualizar</Button>
+        </Form.Item>
+      </Form>
+    </>
   );
 }
