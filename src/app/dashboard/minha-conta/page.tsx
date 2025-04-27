@@ -6,8 +6,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { updateMyAccount } from '@/services/myAccountService';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Form, Input, Button } from 'antd';
+import { useRouter } from 'next/navigation';
 
 const updateUserSchema = z.object({
   email: z.string().email().optional(),
@@ -18,7 +19,7 @@ type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 
 export default function MyAccount() {
   const { user, logout } = useAuth();
-  const [isUpdating, setIsUpdating] = useState(false);
+  const router = useRouter();
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<UpdateUserFormData>({
     resolver: zodResolver(updateUserSchema),
@@ -36,8 +37,6 @@ export default function MyAccount() {
   }, [user, setValue]);
 
   const onSubmit = async (data: UpdateUserFormData) => {
-    console.log('Dados enviados:', data);
-
     if (!user) return;
 
     const sanitizedData = {
@@ -45,24 +44,18 @@ export default function MyAccount() {
       password: data.password || "", 
     };
 
-    setIsUpdating(true);
-
     try {
-      const updatedUser = await updateMyAccount(user.user_id, sanitizedData);
-
-      if (sanitizedData.email !== user.email) {
-        logout();
+      await updateMyAccount(user.user_id, sanitizedData);
+    
+      if ((sanitizedData.email && sanitizedData.email !== user.email) || sanitizedData.password) {
+        await logout(); 
+        router.push('/login?logout=1');
       }
-
-      console.log(updatedUser);
     } catch (error) {
       console.error('Erro ao atualizar dados do usuário:', error);
-    } finally {
-      setIsUpdating(false);
     }
+    
   };
-
-  console.log('Erros de validação:', errors);
 
   return (
     <Form
@@ -99,9 +92,7 @@ export default function MyAccount() {
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit" loading={isUpdating}>
-          {isUpdating ? 'Atualizando...' : 'Atualizar'}
-        </Button>
+        <Button type="primary" htmlType="submit">Atualizar</Button>
       </Form.Item>
     </Form>
   );

@@ -54,12 +54,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Função de logout que remove o token e limpa os dados do usuário
-  const logout = () => {
+  const logout = (showLogoutMessage = false) => {
     logoutUser();
     setUser(null);
     setIsAuthenticated(false);
+  
+    if (showLogoutMessage) {
+      localStorage.setItem('logout_reason', 'Você foi deslogado.');
+    }
   };
+  
 
   // Watch para verificar se o usuário já está autenticado ao carregar a aplicação
   useEffect(() => {
