@@ -15,6 +15,7 @@ interface Category {
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);  
+  const [total, setTotal] = useState<number>(0);  
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
@@ -23,8 +24,8 @@ export default function Categories() {
   });
 
   useMetadata({
-    title: `SmartMart - Categorias`,
-    ogTitle: `SmartMart - Categorias`,
+    title: `SmartMart - Categorias (${total})`,
+    ogTitle: `SmartMart - Categorias (${total})`,
   });
 
   const fetchData = async (page: number, pageSize: number, sortField: string, sortOrder: string) => {
@@ -38,6 +39,7 @@ export default function Categories() {
           total_products: item.total_products ?? 0,
         }))
       );
+      setTotal(response.total);
       setPagination((prevPagination) => ({
         ...prevPagination,
         current: page,
@@ -53,14 +55,14 @@ export default function Categories() {
 
   useEffect(() => {
     fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
-  }, []);  // Executa uma vez ao montar o componente
+  }, []); 
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const handleTableChange = (
     pagination: TablePaginationConfig, 
     filters: Record<string, FilterValue | null>, 
     sorter: SorterResult<Category> | SorterResult<Category>[], 
-    extra: { currentDataSource: Category[] } // Tipo específico para `extra`
+    extra: { currentDataSource: Category[] } 
   ) => {
     const sortField = Array.isArray(sorter) ? 'name' : String(sorter.field || 'name');
     const sortOrder = Array.isArray(sorter)
