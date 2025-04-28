@@ -1,9 +1,5 @@
 import api from './api';
-
-interface Category {
-    id: number;
-    name: string;
-}
+import { Category } from '@/app/dashboard/categorias/page';
 
 interface PaginatedResponse<T> {
     items: T[];
