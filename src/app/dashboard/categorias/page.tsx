@@ -1,12 +1,12 @@
 'use client';
 
-import { Table, message, Popconfirm, Button } from 'antd';
+import { Table, message, Button } from 'antd';
 import { fetchCategories, deleteCategory } from '@/services/categoryService';
 import { PageTitle } from '@/app/style';
 import { useMetadata } from '@/hooks/useMetadata';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState } from 'react';
-
+import { Modal } from 'antd';
 interface Category {
   id: number;
   name: string;
@@ -14,14 +14,23 @@ interface Category {
 }
 
 export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>([]);  
-  const [total, setTotal] = useState<number>(0);  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
-    pageSize: 10, 
+    pageSize: 10,
     total: 0,
   });
+
+  const showDeleteConfirm = (id: number) => {
+    Modal.confirm({
+      title: 'Tem certeza que deseja deletar esta categoria?',
+      okText: 'Sim',
+      cancelText: 'Não',
+      onOk: () => handleDelete(id),
+    });
+  };
 
   useMetadata({
     title: `SmartMart - Categorias (${total})`,
@@ -54,22 +63,22 @@ export default function Categories() {
   };
 
   useEffect(() => {
-    fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
-  }, []); 
+    fetchData(pagination.current || 1, pagination.pageSize || 2, 'id', 'asc');
+  }, []);
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const handleTableChange = (
-    pagination: TablePaginationConfig, 
-    filters: Record<string, FilterValue | null>, 
-    sorter: SorterResult<Category> | SorterResult<Category>[], 
-    extra: { currentDataSource: Category[] } 
+    pagination: TablePaginationConfig,
+    filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<Category> | SorterResult<Category>[],
+    extra: { currentDataSource: Category[] }
   ) => {
     const sortField = Array.isArray(sorter) ? 'name' : String(sorter.field || 'name');
     const sortOrder = Array.isArray(sorter)
       ? 'asc'
       : sorter.order === 'descend'
-      ? 'desc'
-      : 'asc';
+        ? 'desc'
+        : 'asc';
 
     fetchData(pagination.current || 1, pagination.pageSize || 2, sortField, sortOrder);
   };
@@ -106,15 +115,15 @@ export default function Categories() {
     {
       title: 'Ações',
       key: 'actions',
-      render: (_: unknown, record: Category) => (  // Use "unknown" ou "object"
-        <Popconfirm
-          title="Tem certeza que deseja deletar esta categoria?"
-          onConfirm={() => handleDelete(record.id)}
-          okText="Sim"
-          cancelText="Não"
+      render: (_: unknown, record: Category) => (
+        <Button
+          type="primary"
+          danger
+          htmlType="button"
+          onClick={() => showDeleteConfirm(record.id)}
         >
-          <Button type="primary" danger>Deletar</Button>
-        </Popconfirm>
+          Deletar
+        </Button>
       ),
     },
   ];
