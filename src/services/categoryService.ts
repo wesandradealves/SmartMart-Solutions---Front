@@ -40,11 +40,36 @@ export const fetchCategories = async (
  */
 export const createCategory = async (categoryData: CreateCategoryRequest): Promise<Category> => {
     try {
-        const response = await api.post<Category>('/categories', categoryData);
+        const response = await api.post<Category>('/categories/', categoryData);
+        if (!response.data) {
+            return { message: 'Categoria criada com sucesso' } as unknown as Category;
+        }
         return response.data;
     } catch (error) {
-        console.error('Error creating category:', error);
-        throw error;
+        if (error instanceof AxiosError) {
+            if (error.response) {
+                const errorDetails = error.response.data;
+                if (errorDetails.errorFields) {
+                    const fieldErrors = errorDetails.errorFields.map((fieldError: { name: string[]; errors: string[] }) => {
+                        const fieldName = fieldError.name.join(', ');
+                        const fieldMessages = fieldError.errors.join('; ');
+                        return `${fieldName}: ${fieldMessages}`;
+                    }).join('\n');
+                    throw new Error(fieldErrors);
+                }
+                const errorMessage = errorDetails?.detail || 'Erro desconhecido ao criar a categoria';
+                throw new Error(errorMessage);
+            } else if (error.request) {
+                console.error('API Error Request:', error.request);
+                throw new Error('Nenhuma resposta recebida do servidor');
+            } else {
+                console.error('API Error Message:', error.message);
+                throw new Error(error.message);
+            }
+        } else {
+            console.error('Unexpected Error:', error);
+            throw new Error('Erro inesperado ao criar a categoria');
+        }
     }
 };
 

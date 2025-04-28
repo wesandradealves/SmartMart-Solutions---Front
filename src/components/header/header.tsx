@@ -20,7 +20,7 @@ const Header = () => {
 
   useEffect(() => {
     dispatch({ type: 'SET_RENDERED' });
-  }, []);
+  }, [dispatch]);
 
   const handleLogout = async () => {
     dispatch({ type: 'START_LOGOUT' });
@@ -82,13 +82,19 @@ const Header = () => {
             userRole === 'admin' && {
               key: '5',
               icon: <AppstoreOutlined />, 
-              label: <Link href="/dashboard/usuarios">Usuários <span style={{ marginLeft: '5px' }}>⭐</span></Link>,
+              label: (
+                <Link href="/dashboard/usuarios">
+                  <span>
+                    Usuários <span style={{ marginLeft: '5px' }}>⭐</span>
+                  </span>
+                </Link>
+              ),
             },
             {
               key: '6',
               icon: <FileTextOutlined />,
               label: <Link href="http://localhost:8000/docs">Documentação</Link>,
-            },
+            }
           ].filter(item => item !== false)}
         />
 

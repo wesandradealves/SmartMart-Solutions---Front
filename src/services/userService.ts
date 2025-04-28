@@ -1,5 +1,6 @@
 import api from './api';
 import { PaginatedResponse } from './productService';
+import axios from 'axios';
 
 interface LoginResponse {
   message: string;
@@ -11,6 +12,7 @@ interface LoginResponse {
  */
 export interface User {
   id: number;
+  name: string; // Added name field
   email: string;
   username: string;
   role: "admin" | "viewer";
@@ -129,6 +131,21 @@ export const fetchRoles = async (): Promise<string[]> => {
   } catch (error) {
     console.error('Error fetching roles:', error);
     throw error;
+  }
+};
+
+export const createUser = async (userData: User) => {
+  try {
+    const response = await api.post("/users", userData);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Erro ao criar usuário');
+    } else {
+      console.error('Unexpected error:', error);
+      throw new Error('Erro desconhecido ao criar usuário');
+    }
   }
 };
 

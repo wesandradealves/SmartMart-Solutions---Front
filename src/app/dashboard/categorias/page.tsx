@@ -1,13 +1,13 @@
 'use client';
 
-import { Table, message, Button, Input } from 'antd';
-import { fetchCategories, deleteCategory, updateCategory } from '@/services/categoryService';
+import { Table, message, Button, Input, Modal, Form } from 'antd';
+import { fetchCategories, deleteCategory, updateCategory, createCategory } from '@/services/categoryService';
 import { PageTitle } from '@/app/style';
 import { useMetadata } from '@/hooks/useMetadata';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState, useRef } from 'react';
-import { Modal } from 'antd';
 import { updateProductDiscount } from '@/services/productService';
+import CustomSelect from '@/components/CustomSelect/CustomSelect';
 
 export interface Category {
   id: number;
@@ -28,6 +28,8 @@ export default function Categories() {
     pageSize: 10,
     total: 0,
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -172,6 +174,24 @@ export default function Categories() {
     }, 1000);
   };
   
+  const handleCreate = async () => {
+    try {
+        const values = await form.validateFields();
+        const createdCategory = await createCategory(values);
+        message.success(`Categoria criada com sucesso: ${createdCategory.name}`); // Display category name in success message
+        setIsModalOpen(false);
+        form.resetFields();
+        fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
+    } catch (error) {
+        console.error('Erro ao criar categoria:', error);
+        if (error instanceof Error) {
+            message.error(error.message); // Exibe a mensagem de erro detalhada
+        } else {
+            message.error('Erro desconhecido ao criar categoria');
+        }
+    }
+};
+
   const columns = [
     {
       title: 'ID',
@@ -216,11 +236,14 @@ export default function Categories() {
       key: 'discount_percentage',
       sorter: true,
       render: (_: unknown, record: Category) => (
-        <Input
-          type='number'
-          defaultValue={record.discount_percentage}
-          onChange={(e) => handleDiscountChange(e.target.value, record.id)}
-          suffix="%"
+        <CustomSelect
+          label="Desconto"
+          value={record.discount_percentage.toString()}
+          onChange={(value) => handleDiscountChange(value, record.id)}
+          options={Array.from({ length: 101 }, (_, i) => ({
+            value: i.toString(),
+            label: `${i}%`,
+          }))}
         />
       ),
     },
@@ -243,6 +266,9 @@ export default function Categories() {
   return (
     <>
       <PageTitle className='mb-4 font-bold text-2xl'>Categorias</PageTitle>
+      <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
+        Cadastrar nova
+      </Button>
       <Table
         columns={columns}
         dataSource={categories}
@@ -251,6 +277,48 @@ export default function Categories() {
         pagination={pagination}
         onChange={handleTableChange}
       />
+      <Modal
+        title="Cadastrar Categoria"
+        open={isModalOpen}
+        onOk={handleCreate}
+        onCancel={() => setIsModalOpen(false)}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Nome"
+            rules={[{ required: true, message: 'Por favor, insira o nome da categoria' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label="Descrição">
+            <TextArea rows={4} />
+          </Form.Item>
+          <Form.Item
+            name="discount_percentage"
+            label="Desconto (%)"
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const numericValue = parseFloat(value);
+                  if (!value || (!isNaN(numericValue) && numericValue >= 0 && numericValue <= 100)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Insira um número válido entre 0 e 100'));
+                },
+              }),
+            ]}
+          >
+            <Input
+              type="text"
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9.]/g, ''); 
+                form.setFieldValue('discount_percentage', value);
+              }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 }
