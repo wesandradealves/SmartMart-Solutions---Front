@@ -1,6 +1,6 @@
 'use client';
 
-import { Table, message, Button, Input, InputNumber, Select, Modal, Form } from 'antd';
+import { Table, message, Button, Input, InputNumber, Modal, Form } from 'antd';
 import { fetchProducts, deleteProduct, updateProduct, createProduct } from '@/services/productService';
 import { fetchCategories } from '@/services/categoryService';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useMetadata } from '@/hooks/useMetadata';
 import { PageTitle } from '@/app/style';
 import TextArea from 'antd/es/input/TextArea';
+import CustomSelect from '@/components/CustomSelect/CustomSelect';
 
 export interface Product {
     id: number;
@@ -184,14 +185,14 @@ const ProdutosPage: React.FC = () => {
             sorter: true,
             render: (_: unknown, record: Product) => (
                 <div className='relative block'>
-                    <Select
-                        value={record.category_id}
-                        onChange={(value) => handleFieldChange(record.id, 'category_id', value)}
+                    <CustomSelect
+                        label="Categoria"
+                        value={record.category_id.toString()}
+                        onChange={(value) => handleFieldChange(record.id, 'category_id', parseInt(value))}
                         options={categories.map((category) => ({
-                            value: category.id,
+                            value: category.id.toString(),
                             label: category.name,
                         }))}
-                        style={{ width: '100%' }}
                     />
                 </div>
             ),
@@ -292,6 +293,21 @@ const ProdutosPage: React.FC = () => {
                         label="Marca"
                     >
                         <Input />
+                    </Form.Item>
+                    <Form.Item
+                        name="category_id"
+                        label="Categoria"
+                        rules={[{ required: true, message: 'Por favor, selecione uma categoria' }]}
+                    >
+                        <CustomSelect
+                            label="Categoria"
+                            value={form.getFieldValue('category_id')?.toString() || ''}
+                            onChange={(value) => form.setFieldValue('category_id', parseInt(value))}
+                            options={categories.map((category) => ({
+                                value: category.id.toString(),
+                                label: category.name,
+                            }))}
+                        />
                     </Form.Item>
                 </Form>
             </Modal>
