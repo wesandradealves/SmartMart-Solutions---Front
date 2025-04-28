@@ -69,6 +69,28 @@ export const exportCategoriesCSV = async (): Promise<void> => {
 };
 
 /**
+ * Imports categories from a CSV file.
+ * @param {File} file - The CSV file to upload.
+ * @returns {Promise<string>} - A success message.
+ */
+export const importCategoriesCSV = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await api.post('/categories/upload-csv', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data.message;
+    } catch (error) {
+        console.error('Error importing categories:', error);
+        throw error;
+    }
+};
+
+/**
  * Exports sales as a CSV file.
  * @returns {Promise<void>} - Resolves when the file is downloaded.
  */

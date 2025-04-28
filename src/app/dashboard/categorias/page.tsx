@@ -8,7 +8,7 @@ import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/
 import { useEffect, useState, useRef } from 'react';
 import { updateProductDiscount } from '@/services/productService';
 import CustomSelect from '@/components/CustomSelect/CustomSelect';
-import { exportCategoriesCSV } from '@/services/csvService';
+import { exportCategoriesCSV, importCategoriesCSV } from '@/services/csvService';
 
 export interface Category {
   id: number;
@@ -282,6 +282,30 @@ export default function Categories() {
         </Button>
         <Button type="primary" onClick={handleExportCSV} className="text-md rounded-none bg-blue-900 font-light flex items-center">
           Exportar CSV
+        </Button>
+        <input
+          type="file"
+          id="import-csv-input"
+          style={{ display: 'none' }}
+          accept=".csv"
+          onChange={async (e) => {
+            if (e.target.files?.[0]) {
+              try {
+                const messageResponse = await importCategoriesCSV(e.target.files[0]);
+                message.success(messageResponse);
+                fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc');
+              } catch {
+                message.error('Erro ao importar categorias');
+              }
+            }
+          }}
+        />
+        <Button
+          type="primary"
+          onClick={() => document.getElementById('import-csv-input')?.click()}
+          className="text-md rounded-none bg-blue-900 font-light flex items-center"
+        >
+          Importar CSV
         </Button>
       </div>
 
