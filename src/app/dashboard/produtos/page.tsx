@@ -121,6 +121,15 @@ const ProdutosPage: React.FC = () => {
             ),
         },
         {
+            title: 'Preço',
+            dataIndex: 'price',
+            key: 'price',
+            sorter: true,
+            render: (_: string, record: Product) => (
+                <span>R${record.price.toFixed(2)}</span>
+            ),
+        },
+        {
             title: 'Ações',
             key: 'actions',
             render: (_: unknown, record: Product) => (

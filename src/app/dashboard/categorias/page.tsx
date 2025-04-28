@@ -1,16 +1,19 @@
 'use client';
 
-import { Table, message, Button } from 'antd';
+import { Table, message, Button, Input } from 'antd';
 import { fetchCategories, deleteCategory } from '@/services/categoryService';
 import { PageTitle } from '@/app/style';
 import { useMetadata } from '@/hooks/useMetadata';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Modal } from 'antd';
-interface Category {
+import { updateProductDiscount } from '@/services/productService';
+
+export interface Category {
   id: number;
   name: string;
   total_products: number;
+  discount_percentage: number;
 }
 
 export default function Categories() {
@@ -22,6 +25,8 @@ export default function Categories() {
     pageSize: 10,
     total: 0,
   });
+
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showDeleteConfirm = (id: number) => {
     Modal.confirm({
@@ -42,10 +47,11 @@ export default function Categories() {
     try {
       const response = await fetchCategories(page, pageSize, sortField, sortOrder);
       setCategories(
-        response.items.map((item: { id: number; name: string; total_products?: number }) => ({
+        response.items.map((item: { id: number; name: string; total_products?: number; discount_percentage?: number }) => ({
           id: item.id,
           name: item.name,
           total_products: item.total_products ?? 0,
+          discount_percentage: item.discount_percentage ?? 0,
         }))
       );
       setTotal(response.total);
@@ -65,7 +71,7 @@ export default function Categories() {
   useEffect(() => {
     fetchData(pagination.current || 1, pagination.pageSize || 2, 'id', 'asc');
   }, []);
-
+  
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const handleTableChange = (
     pagination: TablePaginationConfig,
@@ -77,8 +83,8 @@ export default function Categories() {
     const sortOrder = Array.isArray(sorter)
       ? 'asc'
       : sorter.order === 'descend'
-        ? 'desc'
-        : 'asc';
+      ? 'desc'
+      : 'asc';
 
     fetchData(pagination.current || 1, pagination.pageSize || 2, sortField, sortOrder);
   };
@@ -93,6 +99,34 @@ export default function Categories() {
     }
   };
 
+  const handleDiscountChange = (value: string, categoryId: number) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  
+    timeoutRef.current = setTimeout(async () => {
+      try {
+        const formattedValue = value.replace(',', '.');
+        const discount = parseFloat(formattedValue);
+  
+        if (!isNaN(discount)) {
+          const response = await updateProductDiscount(categoryId, discount);
+  
+          if (response.success) {
+            message.success('Desconto atualizado com sucesso');
+          } else {
+            message.error('Erro ao atualizar desconto');
+          }
+        } else {
+          message.error('Valor de desconto inválido');
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar desconto:', error);
+        message.error('Erro ao atualizar desconto');
+      }
+    }, 1000);
+  };
+  
   const columns = [
     {
       title: 'ID',
@@ -111,6 +145,20 @@ export default function Categories() {
       dataIndex: 'total_products',
       key: 'total_products',
       sorter: true,
+    },
+    {
+      title: 'Desconto Aplicado (%)',
+      dataIndex: 'discount_percentage',
+      key: 'discount_percentage',
+      sorter: true,
+      render: (_: unknown, record: Category) => (
+        <Input
+          type='number'
+          defaultValue={record.discount_percentage}
+          onChange={(e) => handleDiscountChange(e.target.value, record.id)}
+          suffix="%"
+        />
+      ),
     },
     {
       title: 'Ações',
