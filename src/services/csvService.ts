@@ -136,3 +136,25 @@ export const exportSalesWithProfitCSV = async (): Promise<void> => {
         throw error;
     }
 };
+
+/**
+ * Imports users from a CSV file.
+ * @param {File} file - The CSV file to upload.
+ * @returns {Promise<string>} - A success message.
+ */
+export const importUsersCSV = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await api.post('/users/upload-csv', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data.message;
+    } catch (error) {
+        console.error('Error importing users:', error);
+        throw error;
+    }
+};

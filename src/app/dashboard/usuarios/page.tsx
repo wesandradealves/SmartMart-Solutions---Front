@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { PageTitle } from "@/app/style";
 import CustomSelect from "@/components/CustomSelect/CustomSelect";
 import { useMetadata } from "@/hooks/useMetadata";
-import { exportUsersCSV } from '@/services/csvService';
+import { exportUsersCSV, importUsersCSV } from '@/services/csvService';
 
 export interface User {
   id: number;
@@ -251,6 +251,30 @@ const UsuariosPage: React.FC = () => {
           <Button type="primary" onClick={handleExportCSV} className="text-md rounded-none bg-blue-900 font-light flex items-center">
             Exportar CSV
           </Button>
+          <input
+            type="file"
+            id="import-csv-input"
+            style={{ display: 'none' }}
+            accept=".csv"
+            onChange={async (e) => {
+                if (e.target.files?.[0]) {
+                    try {
+                        const messageResponse = await importUsersCSV(e.target.files[0]);
+                        message.success(messageResponse);
+                        fetchData(pagination.current || 1, pagination.pageSize || 10);
+                    } catch {
+                        message.error('Erro ao importar usuários');
+                    }
+                }
+            }}
+          />
+          <Button
+            type="primary"
+            onClick={() => document.getElementById('import-csv-input')?.click()}
+            className="text-md rounded-none bg-blue-900 font-light flex items-center"
+          >
+            Importar CSV
+          </Button>
         </div>
         <div className="flex items-center justify-end gap-4">
           <p className='font-bold text-sm'>Filtrar por</p>
@@ -266,8 +290,6 @@ const UsuariosPage: React.FC = () => {
           />
         </div>
       </div>
-
-      {/*  */}
 
       <Table
         columns={columns}
