@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, message, Button, Input } from 'antd';
-import { fetchCategories, deleteCategory } from '@/services/categoryService';
+import { fetchCategories, deleteCategory, updateCategory } from '@/services/categoryService';
 import { PageTitle } from '@/app/style';
 import { useMetadata } from '@/hooks/useMetadata';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
@@ -12,9 +12,12 @@ import { updateProductDiscount } from '@/services/productService';
 export interface Category {
   id: number;
   name: string;
+  description?: string;
   total_products: number;
   discount_percentage: number;
 }
+
+const { TextArea } = Input;
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,9 +50,10 @@ export default function Categories() {
     try {
       const response = await fetchCategories(page, pageSize, sortField, sortOrder);
       setCategories(
-        response.items.map((item: { id: number; name: string; total_products?: number; discount_percentage?: number }) => ({
+        response.items.map((item: { id: number; name: string; description?: string; total_products?: number; discount_percentage?: number }) => ({
           id: item.id,
           name: item.name,
+          description: item.description,
           total_products: item.total_products ?? 0,
           discount_percentage: item.discount_percentage ?? 0,
         }))
@@ -99,6 +103,47 @@ export default function Categories() {
     }
   };
 
+  const handleFieldChange = (value: string, categoryId: number, field: 'name' | 'description') => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  
+    timeoutRef.current = setTimeout(async () => {
+      try {
+        if (field === 'name') {
+          if (value.trim() !== "") {
+            const response = await updateCategory(categoryId, { name: value.trim() });
+            message.success('Nome da categoria atualizado com sucesso');
+            setCategories((prevCategories) =>
+              prevCategories.map((category) =>
+                category.id === categoryId ? { ...category, name: response.name } : category
+              )
+            );
+          } else {
+            message.error('Nome da categoria não pode ser vazio');
+          }
+        } else if (field === 'description') {
+          const updatedDescription = value.trim();
+          if (updatedDescription !== "") {
+            const response = await updateCategory(categoryId, { description: updatedDescription });
+            message.success('Descrição da categoria atualizada com sucesso');
+            setCategories((prevCategories) =>
+              prevCategories.map((category) =>
+                category.id === categoryId ? { ...category, description: updatedDescription } : category
+              )
+            );
+          } else {
+            message.error('Descrição não pode ser vazia');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar campo:', error);
+        message.error('Erro ao atualizar');
+      }
+    }, 1000);
+  };
+  
+  
   const handleDiscountChange = (value: string, categoryId: number) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -139,12 +184,31 @@ export default function Categories() {
       dataIndex: 'name',
       key: 'name',
       sorter: true,
+      render: (_: unknown, record: Category) => (
+        <Input
+          defaultValue={record.name}
+          onChange={(e) => handleFieldChange(e.target.value, record.id, 'name')}
+        />
+      ),
     },
     {
       title: 'Total de Produtos',
       dataIndex: 'total_products',
       key: 'total_products',
       sorter: true,
+    },
+    {
+      title: 'Descriçao',
+      dataIndex: 'description',
+      key: 'description',
+      sorter: true,
+      render: (_: unknown, record: Category) => (
+        <TextArea
+          defaultValue={record.description}
+          onChange={(e) => handleFieldChange(e.target.value, record.id, 'description')}
+          rows={4} 
+        />
+      ),
     },
     {
       title: 'Desconto Aplicado (%)',

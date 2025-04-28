@@ -1,16 +1,12 @@
 import api from './api';
 import { Category } from '@/app/dashboard/categorias/page';
-
+import { AxiosError } from 'axios';
 interface PaginatedResponse<T> {
     items: T[];
     total: number;
 }
 
 interface CreateCategoryRequest {
-    name: string;
-}
-
-interface UpdateCategoryRequest {
     name: string;
 }
 
@@ -55,24 +51,41 @@ export const createCategory = async (categoryData: CreateCategoryRequest): Promi
     }
 };
 
+
 /**
- * Updates an existing category.
+ * Updates the name of an existing category.
  * @param {number} categoryId - The ID of the category to update.
- * @param {UpdateCategoryRequest} categoryData - The updated data for the category.
  * @returns {Promise<Category>} - The updated category.
  */
+
 export const updateCategory = async (
     categoryId: number,
-    categoryData: UpdateCategoryRequest
+    categoryData: { name?: string; description?: string; discount_percentage?: number }
 ): Promise<Category> => {
+    if (!categoryData.name && !categoryData.description && !categoryData.discount_percentage) {
+        throw new Error('Nenhum dado foi fornecido para atualização.');
+    }
+
     try {
         const response = await api.put<Category>(`/categories/${categoryId}`, categoryData);
         return response.data;
     } catch (error) {
-        console.error('Error updating category:', error);
-        throw error;
+        if (error instanceof AxiosError) {
+            if (error.response?.data && Array.isArray(error.response.data)) {
+                const errorMessages = error.response.data.map((err: { msg: string }) => err.msg);
+                console.error('API error:', errorMessages.join(', '));
+                throw new Error(errorMessages.join(', ')); 
+            }
+            console.error('API error:', error.response?.data || error.message);
+            throw new Error(error.response?.data?.message || 'Erro desconhecido ao atualizar a categoria');
+        } else {
+            console.error('Unexpected error:', error);
+            throw new Error('Erro inesperado ao atualizar a categoria');
+        }
     }
 };
+
+
 
 /**
  * Deletes a category.
