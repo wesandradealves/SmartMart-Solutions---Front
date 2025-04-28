@@ -1,7 +1,7 @@
 'use client';
 
-import { Table, message, Button } from 'antd';
-import { fetchProducts, deleteProduct } from '@/services/productService';
+import { Table, message, Button, Input, InputNumber } from 'antd';
+import { fetchProducts, deleteProduct, updateProduct } from '@/services/productService';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState } from 'react';
 import { useMetadata } from '@/hooks/useMetadata';
@@ -13,6 +13,7 @@ export interface Product {
     name: string;
     price: number;
     brand: string;
+    description: string;
     category_id: number;
     category: {
         name: string;
@@ -28,6 +29,20 @@ const ProdutosPage: React.FC = () => {
         pageSize: 10,
         total: 0,
     });
+
+    const translationMap: { [key: string]: string } = {
+        name: "Nome",
+        description: "Descrição",
+        price: "Preço",
+        category_id: "ID da Categoria",
+        brand: "Marca",
+        id: "ID",
+        category: "Categoria",
+    };
+    
+    const translateKey = (key: string): string => {
+        return translationMap[key] || key; 
+    };
 
     const showDeleteConfirm = (id: number) => {
         Modal.confirm({
@@ -94,6 +109,17 @@ const ProdutosPage: React.FC = () => {
         }
     };
 
+    const handleFieldChange = async (productId: number, field: string, value: string | number | boolean) => {
+        try {
+            const updatedData = { [field]: value };
+            await updateProduct(productId, updatedData);
+            message.success(`${translateKey(field)} atualizado com sucesso`);
+            fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc');
+        } catch (error) {
+            message.error(`Erro ao atualizar ${field}`);
+        }
+    };
+
     const columns = [
         {
             title: 'ID',
@@ -106,18 +132,30 @@ const ProdutosPage: React.FC = () => {
             dataIndex: 'name',
             key: 'name',
             sorter: true,
+            render: (_: unknown, record: Product) => (
+                <Input
+                    defaultValue={record.name}
+                    onBlur={(e) => handleFieldChange(record.id, 'name', e.target.value)}
+                />
+            ),
         },
         {
             title: 'Categoria',
-            dataIndex: 'category',
+            dataIndex: 'category', 
             key: 'category',
-            sorter: (a: Product, b: Product) => {
-                const nameA = a.category?.name?.toLowerCase() || '';
-                const nameB = b.category?.name?.toLowerCase() || '';
-                return nameA.localeCompare(nameB);
-            },
-            render: (_: string, record: Product) => (
-                <span>{record.category?.name}</span>
+            sorter: true,
+            render: (_: unknown, record: Product) => record.category.name, 
+        },
+        {
+            title: 'Descrição',
+            dataIndex: 'description',
+            key: 'description',
+            render: (_: unknown, record: Product) => (
+                <Input.TextArea
+                    defaultValue={record.description}
+                    rows={2}
+                    onBlur={(e) => handleFieldChange(record.id, 'description', e.target.value)}
+                />
             ),
         },
         {
@@ -125,8 +163,30 @@ const ProdutosPage: React.FC = () => {
             dataIndex: 'price',
             key: 'price',
             sorter: true,
-            render: (_: string, record: Product) => (
-                <span>R${record.price.toFixed(2)}</span>
+            render: (_: unknown, record: Product) => (
+                <>
+                    R$
+                    <InputNumber
+                        defaultValue={record.price}
+                        min={0}
+                        className='ms-2'
+                        formatter={(value) => `${value}`}
+                        parser={(value) => parseFloat(value?.replace(/R\$\s?/g, '') || '0')}
+                        onBlur={(e) => handleFieldChange(record.id, 'price', parseFloat(e.target.value))}
+                    />
+                </>
+            ),
+        },
+        {
+            title: 'Marca',
+            dataIndex: 'brand',
+            key: 'brand',
+            sorter: true,
+            render: (_: unknown, record: Product) => (
+                <Input
+                    defaultValue={record.brand}
+                    onBlur={(e) => handleFieldChange(record.id, 'brand', e.target.value)}
+                />
             ),
         },
         {
