@@ -175,16 +175,21 @@ export default function Categories() {
   
   const handleCreate = async () => {
     try {
-      const values = await form.validateFields();
-      await createCategory(values);
-      message.success('Categoria criada com sucesso');
-      setIsModalOpen(false);
-      form.resetFields();
-      fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
+        const values = await form.validateFields();
+        const createdCategory = await createCategory(values);
+        message.success(`Categoria criada com sucesso: ${createdCategory.name}`); // Display category name in success message
+        setIsModalOpen(false);
+        form.resetFields();
+        fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
     } catch (error) {
-      message.error('Erro ao criar categoria');
+        console.error('Erro ao criar categoria:', error);
+        if (error instanceof Error) {
+            message.error(error.message); // Exibe a mensagem de erro detalhada
+        } else {
+            message.error('Erro desconhecido ao criar categoria');
+        }
     }
-  };
+};
 
   const columns = [
     {
@@ -288,9 +293,25 @@ export default function Categories() {
           <Form.Item
             name="discount_percentage"
             label="Desconto (%)"
-            rules={[{ type: 'number', min: 0, max: 100, message: 'Insira um valor entre 0 e 100' }]}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const numericValue = parseFloat(value);
+                  if (!value || (!isNaN(numericValue) && numericValue >= 0 && numericValue <= 100)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Insira um número válido entre 0 e 100'));
+                },
+              }),
+            ]}
           >
-            <Input type="number" />
+            <Input
+              type="text"
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9.]/g, ''); 
+                form.setFieldValue('discount_percentage', value);
+              }}
+            />
           </Form.Item>
         </Form>
       </Modal>
