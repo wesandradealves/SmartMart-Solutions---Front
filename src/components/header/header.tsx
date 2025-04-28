@@ -14,7 +14,7 @@ const { Header: AntHeader } = Layout;
 
 const Header = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { isAuthenticated, logoutUser } = useAuthActions();
+  const { isAuthenticated, logoutUser, userRole } = useAuthActions();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -40,6 +40,7 @@ const Header = () => {
       '/dashboard/minha-conta': '2',
       '/dashboard/categorias': '3',
       '/dashboard/produtos': '4', 
+      '/dashboard/usuarios': '5', 
     };
 
     return routeToKeyMap[pathname] || '1';
@@ -78,12 +79,17 @@ const Header = () => {
               icon: <AppstoreOutlined />, 
               label: <Link href="/dashboard/produtos">Produtos</Link>,
             }, 
-            {
+            userRole === 'admin' && {
               key: '5',
+              icon: <AppstoreOutlined />, 
+              label: <Link href="/dashboard/usuarios">Usuários <span style={{ marginLeft: '5px' }}>⭐</span></Link>,
+            },
+            {
+              key: '6',
               icon: <FileTextOutlined />,
               label: <Link href="http://localhost:8000/docs">Documentação</Link>,
-            }, 
-          ]}
+            },
+          ].filter(item => item !== false)}
         />
 
         {state.rendered && isAuthenticated && !state.isLoggingOut && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/context/auth';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import axios from 'axios';
 
 /**
@@ -57,5 +57,9 @@ export function useAuthActions() {
     setError(null);
   };
 
-  return { loginUser, logoutUser, loading, error, isAuthenticated, user, clearError };
+  const userRole = useMemo(() => {
+    return user?.role || null;
+  }, [user]);
+
+  return { loginUser, logoutUser, loading, error, isAuthenticated, user, userRole, clearError };
 }
