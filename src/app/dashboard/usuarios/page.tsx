@@ -118,10 +118,10 @@ const UsuariosPage: React.FC = () => {
 
   const handleExportCSV = async () => {
     try {
-      await exportUsersCSV();
-      message.success('Usuários exportados com sucesso');
+        await exportUsersCSV();
+        message.success('Usuários exportados com sucesso');
     } catch {
-      message.error('Erro ao exportar usuários');
+        message.error('Erro ao exportar usuários');
     }
   };
 
