@@ -1,25 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Middleware para proteger rotas e redirecionar usuários não autenticados
+// Middleware para proteger rotas e redirecionar usuários não autenticados ou sem permissão
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ✅ Se estiver tentando acessar /login, deixa passar
   if (pathname.startsWith('/login')) {
     return NextResponse.next();
   }
 
-  // ✅ Se estiver na raíz '/', redireciona pra /home
   if (pathname === '/') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   const sessionToken = request.cookies.get('session_token')?.value;
+  const userRole = request.cookies.get('user_role')?.value;
 
-  // ✅ Se não tiver token em qualquer outra rota protegida, manda para login
   if (!sessionToken) {
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  const protectedRoutes: Record<string, string> = {
+    '/dashboard/usuarios': 'admin',
+  };
+
+  const requiredRole = protectedRoutes[pathname];
+
+  if (requiredRole && userRole == requiredRole) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();
@@ -30,11 +38,6 @@ export const config = {
     '/',
     '/home',
     '/dashboard/:path*',
-    // '/products/:path*',
-    // '/categories/:path*',
-    // '/sales/:path*',
-    // '/users/:path*',
-    // '/price-history/:path*',
     '/login', 
   ],
 };

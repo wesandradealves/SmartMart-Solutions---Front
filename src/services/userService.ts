@@ -1,9 +1,23 @@
 import api from './api';
+import { PaginatedResponse } from './productService';
 
 interface LoginResponse {
   message: string;
   token: string;
 }
+
+/**
+ * Representa um usuário no sistema.
+ */
+export interface User {
+  id: number;
+  email: string;
+  username: string;
+  role: "admin" | "viewer";
+  password?: string;
+  created_at: string;
+}
+
 
 /**
  * Chama o endpoint de login no backend e retorna a resposta do servidor.
@@ -40,3 +54,83 @@ export const logoutUser = async (): Promise<string> => {
   }
   return response.data.message;
 };
+
+/**
+ * Lista os usuários com paginação e ordenação.
+ * @param {number} page - Número da página.
+ * @param {number} pageSize - Tamanho da página.
+ * @param {string} sortBy - Campo para ordenar.
+ * @param {string} sortOrder - Ordem de classificação (asc ou desc).
+ * @returns {Promise<PaginatedResponse<User>>} - Lista paginada de usuários.
+ */
+export const fetchUsers = async (
+  page: number,
+  pageSize: number,
+  sortBy: string = 'username',
+  sortOrder: string = 'asc'
+): Promise<PaginatedResponse<User>> => {
+  try {
+    const response = await api.get<PaginatedResponse<User>>('/users', {
+      params: {
+        skip: (page - 1) * pageSize,
+        limit: pageSize,
+        sort_by: sortBy,
+        sort: sortOrder,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Atualiza os dados de um usuário.
+ * @param {number} userId - ID do usuário a ser atualizado.
+ * @param {Partial<User>} userData - Dados atualizados do usuário.
+ * @returns {Promise<User>} - Usuário atualizado.
+ */
+export const updateUser = async (
+  userId: number,
+  userData: Partial<User>
+): Promise<User> => {
+  try {
+    const response = await api.put<User>(`/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deleta um usuário pelo ID.
+ * @param {number} userId - ID do usuário a ser deletado.
+ * @returns {Promise<void>} - Promessa resolvida quando o usuário for deletado.
+ */
+export const deleteUser = async (userId: number): Promise<void> => {
+  try {
+    await api.delete(`/users/${userId}`);
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+};
+
+/**
+ * Busca os roles disponíveis no sistema.
+ * @returns {Promise<string[]>} - Lista de roles.
+ */
+export const fetchRoles = async (): Promise<string[]> => {
+  try {
+    const response = await api.get<string[]>('/users/roles');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    throw error;
+  }
+};
+
+
+

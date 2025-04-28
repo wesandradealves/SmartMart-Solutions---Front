@@ -122,7 +122,6 @@ const ProdutosPage: React.FC = () => {
             fetchData(pagination.current || 1, pagination.pageSize || 10, 'name', 'asc');
         } catch (error) {
             console.error(error);
-            message.error('Erro ao deletar produto');
         }
     };
 

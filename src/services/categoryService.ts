@@ -1,10 +1,7 @@
 import api from './api';
 import { Category } from '@/app/dashboard/categorias/page';
 import { AxiosError } from 'axios';
-interface PaginatedResponse<T> {
-    items: T[];
-    total: number;
-}
+import { PaginatedResponse } from './productService';
 
 interface CreateCategoryRequest {
     name: string;

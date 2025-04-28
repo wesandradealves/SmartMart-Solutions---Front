@@ -2,7 +2,7 @@ import { AxiosError } from 'axios';
 import api from './api';
 import { Product } from '@/app/dashboard/produtos/page';
 
-interface PaginatedResponse<T> {
+export interface PaginatedResponse<T> {
     items: T[];
     total: number;
 }
