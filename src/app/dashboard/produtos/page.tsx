@@ -1,14 +1,14 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Table, message, Button, Input, InputNumber, Modal, Form } from 'antd';
 import { fetchProducts, deleteProduct, updateProduct, createProduct } from '@/services/productService';
 import { fetchCategories } from '@/services/categoryService';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
-import { useEffect, useState } from 'react';
 import { useMetadata } from '@/hooks/useMetadata';
 import { PageTitle } from '@/app/style';
-import TextArea from 'antd/es/input/TextArea';
 import CustomSelect from '@/components/CustomSelect/CustomSelect';
+import TextArea from 'antd/es/input/TextArea';
 
 export interface Product {
     id: number;
@@ -22,7 +22,49 @@ export interface Product {
     };
 }
 
-const ProdutosPage: React.FC = () => {
+const ProductForm = ({
+    form,
+    categories,
+}: {
+    form: ReturnType<typeof Form.useForm>[0];
+    categories: { id: number; name: string }[];
+}) => (
+    <Form form={form} layout="vertical">
+        <Form.Item
+            name="name"
+            label="Nome"
+            rules={[{ required: true, message: 'Por favor, insira o nome do produto' }]}
+        >
+            <Input />
+        </Form.Item>
+        <Form.Item name="description" label="Descrição">
+            <TextArea rows={4} />
+        </Form.Item>
+        <Form.Item name="price" label="Preço">
+            <Input type="number" />
+        </Form.Item>
+        <Form.Item name="brand" label="Marca">
+            <Input />
+        </Form.Item>
+        <Form.Item
+            name="category_id"
+            label="Categoria"
+            rules={[{ required: true, message: 'Por favor, selecione uma categoria' }]}
+        >
+            <CustomSelect
+                label="Categoria"
+                value={form.getFieldValue('category_id')?.toString() || ''}
+                onChange={(value) => form.setFieldsValue({ category_id: parseInt(value) })}
+                options={categories.map((category) => ({
+                    value: category.id.toString(),
+                    label: category.name,
+                }))}
+            />
+        </Form.Item>
+    </Form>
+);
+
+const ProdutosPage = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [total, setTotal] = useState<number>(0);
     const [loading, setLoading] = useState(false);
@@ -34,6 +76,7 @@ const ProdutosPage: React.FC = () => {
     const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
+    const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
     const translationMap: { [key: string]: string } = {
         name: "Nome",
@@ -45,32 +88,22 @@ const ProdutosPage: React.FC = () => {
         category: "Categoria",
     };
 
-    const translateKey = (key: string): string => {
-        return translationMap[key] || key;
-    };
-
-    const showDeleteConfirm = (id: number) => {
-        Modal.confirm({
-            title: 'Tem certeza que deseja deletar este produto?',
-            okText: 'Sim',
-            cancelText: 'Não',
-            onOk: () => handleDelete(id),
-        });
-    };
-
     useMetadata({
         title: `SmartMart - Produtos (${total})`,
         ogTitle: `SmartMart - Produtos (${total})`,
     });
 
-    const fetchData = async (page: number, pageSize: number, sortField: string, sortOrder: string) => {
+    const translateKey = (key: string): string => translationMap[key] || key;
+
+    const fetchData = async (page: number, pageSize: number, sortField: string, sortOrder: string, categoryId: number | null) => {
         setLoading(true);
         try {
-            const response = await fetchProducts(page, pageSize, sortField, sortOrder);
+            console.log('Fetching products with params:', { page, pageSize, sortField, sortOrder, categoryId });
+            const response = await fetchProducts(page, pageSize, sortField, sortOrder, categoryId); // Usando categoryId diretamente
             setProducts(response.items);
             setTotal(response.total);
-            setPagination((prevPagination) => ({
-                ...prevPagination,
+            setPagination((prev) => ({
+                ...prev,
                 current: page,
                 pageSize,
                 total: response.total,
@@ -83,25 +116,33 @@ const ProdutosPage: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc');
+        fetchData(1, 10, 'id', 'asc', null);
     }, []);
 
     useEffect(() => {
         const loadCategories = async () => {
             try {
                 const response = await fetchCategories(1, 100, 'name', 'asc');
-                setCategories(response.items.map((category: { id: number; name: string }) => ({
-                    id: category.id,
-                    name: category.name,
-                })));
+                setCategories(response.items);
             } catch {
                 message.error('Erro ao carregar categorias');
             }
         };
         loadCategories();
+
+        return () => {
+            setCategories([]); 
+        };
     }, []);
 
+    useEffect(() => {
+        if (selectedCategory !== null) {
+            fetchData(1, pagination.pageSize || 10, 'id', 'asc', selectedCategory);
+        }
+    }, [selectedCategory]);
+
     /* eslint-disable @typescript-eslint/no-unused-vars */
+
     const handleTableChange = (
         pagination: TablePaginationConfig,
         filters: Record<string, FilterValue | null>,
@@ -115,7 +156,7 @@ const ProdutosPage: React.FC = () => {
                 ? 'desc'
                 : 'asc';
 
-        fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder);
+        fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder, selectedCategory);
     };
 
     const handleCreate = async () => {
@@ -125,14 +166,10 @@ const ProdutosPage: React.FC = () => {
             message.success(`Produto criado com sucesso: ${createdProduct.name}`);
             setIsModalOpen(false);
             form.resetFields();
-            fetchData(pagination.current || 1, pagination.pageSize || 10, 'name', 'asc');
+            fetchData(pagination.current || 1, pagination.pageSize || 10, 'name', 'asc', selectedCategory);
         } catch (error) {
             console.error('Erro ao criar produto:', error);
-            if (error instanceof Error) {
-                message.error(error.message);
-            } else {
-                message.error('Erro desconhecido ao criar produto');
-            }
+            message.error('Erro ao criar produto');
         }
     };
 
@@ -140,42 +177,37 @@ const ProdutosPage: React.FC = () => {
         try {
             await deleteProduct(productId);
             message.success('Produto deletado com sucesso');
-            fetchData(pagination.current || 1, pagination.pageSize || 10, 'name', 'asc');
-        } catch (error) {
-            console.error(error);
+            fetchData(pagination.current || 1, pagination.pageSize || 10, 'name', 'asc', selectedCategory);
+        } catch {
+            message.error('Erro ao deletar produto');
         }
     };
 
     const handleFieldChange = async (productId: number, field: string, value: string | number | boolean) => {
         try {
-            const updatedData = { [field]: value };
-            await updateProduct(productId, updatedData);
-
+            await updateProduct(productId, { [field]: value });
             message.success(`${translateKey(field)} atualizado com sucesso`);
-
-            fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc');
-        } catch (error) {
+            fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc', null);
+        } catch {
             message.error(`Erro ao atualizar ${field}`);
         }
     };
 
+    const handleCategoryChange = (value: string) => {
+        const categoryId = value ? parseInt(value) : null;
+        setSelectedCategory(categoryId);
+        fetchData(1, pagination.pageSize || 10, 'id', 'asc', categoryId); // Passa o valor atualizado diretamente
+    };
+
     const columns = [
-        {
-            title: 'ID',
-            dataIndex: 'id',
-            key: 'id',
-            sorter: true,
-        },
+        { title: 'ID', dataIndex: 'id', key: 'id', sorter: true },
         {
             title: 'Nome',
             dataIndex: 'name',
             key: 'name',
             sorter: true,
             render: (_: unknown, record: Product) => (
-                <Input
-                    defaultValue={record.name}
-                    onBlur={(e) => handleFieldChange(record.id, 'name', e.target.value)}
-                />
+                <Input defaultValue={record.name} onBlur={(e) => handleFieldChange(record.id, 'name', e.target.value)} />
             ),
         },
         {
@@ -184,17 +216,12 @@ const ProdutosPage: React.FC = () => {
             key: 'category',
             sorter: true,
             render: (_: unknown, record: Product) => (
-                <div className='relative block'>
-                    <CustomSelect
-                        label="Categoria"
-                        value={record.category_id.toString()}
-                        onChange={(value) => handleFieldChange(record.id, 'category_id', parseInt(value))}
-                        options={categories.map((category) => ({
-                            value: category.id.toString(),
-                            label: category.name,
-                        }))}
-                    />
-                </div>
+                <CustomSelect
+                    label="Categoria"
+                    value={record.category_id.toString()}
+                    onChange={(value) => handleFieldChange(record.id, 'category_id', parseInt(value))}
+                    options={categories.map((c) => ({ value: c.id.toString(), label: c.name }))}
+                />
             ),
         },
         {
@@ -202,11 +229,7 @@ const ProdutosPage: React.FC = () => {
             dataIndex: 'description',
             key: 'description',
             render: (_: unknown, record: Product) => (
-                <Input.TextArea
-                    defaultValue={record.description}
-                    rows={2}
-                    onBlur={(e) => handleFieldChange(record.id, 'description', e.target.value)}
-                />
+                <Input.TextArea defaultValue={record.description} rows={2} onBlur={(e) => handleFieldChange(record.id, 'description', e.target.value)} />
             ),
         },
         {
@@ -220,7 +243,7 @@ const ProdutosPage: React.FC = () => {
                     <InputNumber
                         defaultValue={record.price}
                         min={0}
-                        className='ms-2'
+                        className="ms-2"
                         formatter={(value) => `${value}`}
                         parser={(value) => parseFloat(value?.replace(/R\$\s?/g, '') || '0')}
                         onBlur={(e) => handleFieldChange(record.id, 'price', parseFloat(e.target.value))}
@@ -234,22 +257,14 @@ const ProdutosPage: React.FC = () => {
             key: 'brand',
             sorter: true,
             render: (_: unknown, record: Product) => (
-                <Input
-                    defaultValue={record.brand}
-                    onBlur={(e) => handleFieldChange(record.id, 'brand', e.target.value)}
-                />
+                <Input defaultValue={record.brand} onBlur={(e) => handleFieldChange(record.id, 'brand', e.target.value)} />
             ),
         },
         {
             title: 'Ações',
             key: 'actions',
             render: (_: unknown, record: Product) => (
-                <Button
-                    type="primary"
-                    danger
-                    htmlType="button"
-                    onClick={() => showDeleteConfirm(record.id)}
-                >
+                <Button type="primary" danger onClick={() => handleDelete(record.id)}>
                     Deletar
                 </Button>
             ),
@@ -258,59 +273,36 @@ const ProdutosPage: React.FC = () => {
 
     return (
         <>
-            <PageTitle className='mb-4 font-bold text-2xl'>Produtos</PageTitle>
+            <PageTitle className="mb-4 font-bold text-2xl">Produtos</PageTitle>
+
             <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
                 Cadastrar novo
             </Button>
+
             <Modal
                 title="Cadastrar Produto"
                 open={isModalOpen}
                 onOk={handleCreate}
                 onCancel={() => setIsModalOpen(false)}
             >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        name="name"
-                        label="Nome"
-                        rules={[{ required: true, message: 'Por favor, insira o nome do produto' }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="description"
-                        label="Descrição"
-                    >
-                        <TextArea rows={4} />
-                    </Form.Item>
-                    <Form.Item
-                        name="price"
-                        label="Preço"
-                    >
-                        <Input type="number" />
-                    </Form.Item>
-                    <Form.Item
-                        name="brand"
-                        label="Marca"
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="category_id"
-                        label="Categoria"
-                        rules={[{ required: true, message: 'Por favor, selecione uma categoria' }]}
-                    >
-                        <CustomSelect
-                            label="Categoria"
-                            value={form.getFieldValue('category_id')?.toString() || ''}
-                            onChange={(value) => form.setFieldValue('category_id', parseInt(value))}
-                            options={categories.map((category) => ({
-                                value: category.id.toString(),
-                                label: category.name,
-                            }))}
-                        />
-                    </Form.Item>
-                </Form>
+                <ProductForm form={form} categories={categories} />
             </Modal>
+
+            <div className="mb-4 flex items-center justify-end gap-4">
+                <p className='font-bold text-sm'>Filtrar por</p>
+                <CustomSelect
+                        label="Filtrar por Categoria"
+                        placeholder='Selecione uma categoria'
+                        value={selectedCategory?.toString() || ''}
+                        onChange={handleCategoryChange}
+                        options={categories.map((category) => ({
+                            value: category.id.toString(),
+                            label: category.name,
+                        }))}
+                    />
+            </div>
+
+
             <Table
                 columns={columns}
                 dataSource={products}

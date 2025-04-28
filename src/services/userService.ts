@@ -68,6 +68,7 @@ export const logoutUser = async (): Promise<string> => {
 export const fetchUsers = async (
   page: number,
   pageSize: number,
+  role: string | null = null,
   sortBy: string = 'username',
   sortOrder: string = 'asc'
 ): Promise<PaginatedResponse<User>> => {
@@ -76,6 +77,7 @@ export const fetchUsers = async (
       params: {
         skip: (page - 1) * pageSize,
         limit: pageSize,
+        role: role || undefined, // Include role filter if provided
         sort_by: sortBy,
         sort: sortOrder,
       },

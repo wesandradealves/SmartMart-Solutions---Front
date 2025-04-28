@@ -20,7 +20,7 @@ const Header = () => {
 
   useEffect(() => {
     dispatch({ type: 'SET_RENDERED' });
-  }, [dispatch]);
+  }, []);
 
   const handleLogout = async () => {
     dispatch({ type: 'START_LOGOUT' });
@@ -39,67 +39,77 @@ const Header = () => {
       '/': '1',
       '/dashboard/minha-conta': '2',
       '/dashboard/categorias': '3',
-      '/dashboard/produtos': '4', 
-      '/dashboard/usuarios': '5', 
+      '/dashboard/produtos': '4',
+      '/dashboard/usuarios': '5',
     };
-
     return routeToKeyMap[pathname] || '1';
   };
+
+  const showAdminMenu = state.rendered && userRole === 'admin';
+
+  const menuItems = [
+    {
+      key: '1',
+      icon: <DashboardOutlined />,
+      label: <Link href="/">Dashboard</Link>,
+    },
+    {
+      key: '2',
+      icon: <FileTextOutlined />,
+      label: <Link href="/dashboard/minha-conta">Minha Conta</Link>,
+    },
+    {
+      key: '3',
+      icon: <AppstoreOutlined />,
+      label: <Link href="/dashboard/categorias">Categorias</Link>,
+    },
+    {
+      key: '4',
+      icon: <AppstoreOutlined />,
+      label: <Link href="/dashboard/produtos">Produtos</Link>,
+    },
+    showAdminMenu
+      ? {
+          key: '5',
+          icon: <AppstoreOutlined />,
+          label: (
+            <Link href="/dashboard/usuarios">
+              <span>Usuários ⭐</span>
+            </Link>
+          ),
+        }
+      : null,
+    {
+      key: '6',
+      icon: <FileTextOutlined />,
+      label: <Link href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer">Documentação</Link>,
+    },
+  ].filter((item) => item !== null);
 
   return (
     <Sider style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
       <AntHeader className="w-full px-2 py-4 h-screen overflow-auto gap-4 flex flex-col bg-white">
         <Link href="/">
-          <LazyLoadImage className="w-full" src="/logo.png" />
+          <LazyLoadImage className="w-full" src="/logo.png" alt="Logo" />
         </Link>
+
         <Menu
           style={{ border: 'none' }}
           theme="light"
-          className='bg-transparent'
+          className="bg-transparent"
           mode="inline"
           selectedKeys={[getSelectedKey()]}
-          items={[
-            {
-              key: '1',
-              icon: <DashboardOutlined />,
-              label: <Link href="/">Dashboard</Link>,
-            },
-            {
-              key: '2',
-              icon: <FileTextOutlined />,
-              label: <Link href="/dashboard/minha-conta">Minha Conta</Link>,
-            },
-            {
-              key: '3',
-              icon: <AppstoreOutlined />,
-              label: <Link href="/dashboard/categorias">Categorias</Link>,
-            },
-            {
-              key: '4',
-              icon: <AppstoreOutlined />, 
-              label: <Link href="/dashboard/produtos">Produtos</Link>,
-            }, 
-            userRole === 'admin' && {
-              key: '5',
-              icon: <AppstoreOutlined />, 
-              label: (
-                <Link href="/dashboard/usuarios">
-                  <span>
-                    Usuários <span style={{ marginLeft: '5px' }}>⭐</span>
-                  </span>
-                </Link>
-              ),
-            },
-            {
-              key: '6',
-              icon: <FileTextOutlined />,
-              label: <Link href="http://localhost:8000/docs">Documentação</Link>,
-            }
-          ].filter(item => item !== false)}
+          items={menuItems}
         />
 
         {state.rendered && isAuthenticated && !state.isLoggingOut && (
-          <Button className="rounded-none uppercase font-bold text-xs mt-auto" type="primary" danger onClick={handleLogout}>
+          <Button
+            block
+            className="rounded-none uppercase font-bold text-xs mt-auto"
+            type="primary"
+            danger
+            onClick={handleLogout}
+          >
             Logout
           </Button>
         )}

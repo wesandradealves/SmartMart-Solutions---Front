@@ -35,11 +35,16 @@ const UsuariosPage: React.FC = () => {
     ogTitle: `SmartMart - Usuários`,
   });
 
+  const handleRoleChange = (value: string) => {
+    const role = value || undefined;
+    setSelectedRole(role ?? null);
+    fetchData(1, pagination.pageSize || 10, role);
+  };
 
-  const fetchData = async (page: number, pageSize: number) => {
+  const fetchData = async (page: number, pageSize: number, role: string | null = null) => {
     setLoading(true);
     try {
-      const data = await fetchUsers(page, pageSize);
+      const data = await fetchUsers(page, pageSize, role || undefined);
       setUsers(data.items);
       setTotal(data.total);
       setPagination({ ...pagination, current: page, total: data.total });
@@ -61,9 +66,9 @@ const UsuariosPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData(pagination.current, pagination.pageSize);
+    fetchData(1, pagination.pageSize, selectedRole);
     fetchRolesData(); 
-  }, []);
+  }, [selectedRole]);
 
   const handleDelete = async (userId: number) => {
     try {
@@ -175,9 +180,11 @@ const UsuariosPage: React.FC = () => {
   return (
     <>
       <PageTitle className="mb-4 font-bold text-2xl">Usuários</PageTitle>
+
       <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
         Cadastrar novo
       </Button>
+
       <Modal
         title="Cadastrar Usuário"
         open={isModalOpen}
@@ -227,6 +234,21 @@ const UsuariosPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <div className="mb-4 flex items-center justify-end gap-4">
+        <p className='font-bold text-sm'>Filtrar por</p>
+        <CustomSelect
+          label="Filtrar por Role"
+          placeholder='Selecione uma role'
+          value={selectedRole || ''}
+          onChange={handleRoleChange}
+          options={roles.map((role) => ({
+            value: role,
+            label: role,
+          }))}
+        />
+      </div>
+
       <Table
         columns={columns}
         dataSource={users}
@@ -234,7 +256,7 @@ const UsuariosPage: React.FC = () => {
         loading={loading}
         pagination={pagination}
         onChange={(pagination) =>
-          fetchData(pagination.current || 1, pagination.pageSize || 10)
+          fetchData(pagination.current || 1, pagination.pageSize || 10, selectedRole)
         }
       />
     </>
