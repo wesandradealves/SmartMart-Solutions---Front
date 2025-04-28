@@ -29,8 +29,8 @@ export const fetchProducts = async (
     const params: Record<string, string | number | undefined> = {
         page,
         pageSize,
-        sortField,
-        sortOrder,
+        sort_by: sortField, // Changed from sortField to sort_by
+        sort: sortOrder,   // Changed from sortOrder to sort
     };
 
     if (categoryId) {
