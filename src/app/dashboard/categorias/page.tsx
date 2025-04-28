@@ -1,12 +1,11 @@
 'use client';
 
-import { Table, message, Button, Input } from 'antd';
-import { fetchCategories, deleteCategory, updateCategory } from '@/services/categoryService';
+import { Table, message, Button, Input, Modal, Form } from 'antd';
+import { fetchCategories, deleteCategory, updateCategory, createCategory } from '@/services/categoryService';
 import { PageTitle } from '@/app/style';
 import { useMetadata } from '@/hooks/useMetadata';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState, useRef } from 'react';
-import { Modal } from 'antd';
 import { updateProductDiscount } from '@/services/productService';
 
 export interface Category {
@@ -28,6 +27,8 @@ export default function Categories() {
     pageSize: 10,
     total: 0,
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -172,6 +173,19 @@ export default function Categories() {
     }, 1000);
   };
   
+  const handleCreate = async () => {
+    try {
+      const values = await form.validateFields();
+      await createCategory(values);
+      message.success('Categoria criada com sucesso');
+      setIsModalOpen(false);
+      form.resetFields();
+      fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
+    } catch (error) {
+      message.error('Erro ao criar categoria');
+    }
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -243,6 +257,9 @@ export default function Categories() {
   return (
     <>
       <PageTitle className='mb-4 font-bold text-2xl'>Categorias</PageTitle>
+      <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
+        Cadastrar nova
+      </Button>
       <Table
         columns={columns}
         dataSource={categories}
@@ -251,6 +268,32 @@ export default function Categories() {
         pagination={pagination}
         onChange={handleTableChange}
       />
+      <Modal
+        title="Cadastrar Categoria"
+        open={isModalOpen}
+        onOk={handleCreate}
+        onCancel={() => setIsModalOpen(false)}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Nome"
+            rules={[{ required: true, message: 'Por favor, insira o nome da categoria' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label="Descrição">
+            <TextArea rows={4} />
+          </Form.Item>
+          <Form.Item
+            name="discount_percentage"
+            label="Desconto (%)"
+            rules={[{ type: 'number', min: 0, max: 100, message: 'Insira um valor entre 0 e 100' }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 }
