@@ -21,20 +21,24 @@ interface CreateProductRequest {
  */
 export const fetchProducts = async (
     page: number,
-    limit: number,
-    sortBy: string = 'name',
-    sortOrder: string = 'asc'
-): Promise<PaginatedResponse<Product>> => {
-    try {
-        const skip = (page - 1) * limit;
-        const response = await api.get<PaginatedResponse<Product>>('/products', {
-            params: { skip, limit, sort_by: sortBy, sort: sortOrder }, 
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        throw error;
+    pageSize: number,
+    sortField: string,
+    sortOrder: string,
+    categoryId?: number | null
+) => {
+    const params: Record<string, string | number | undefined> = {
+        page,
+        pageSize,
+        sortField,
+        sortOrder,
+    };
+
+    if (categoryId) {
+        params.category_id = categoryId;
     }
+
+    const response = await api.get('/products', { params });
+    return response.data;
 };
 
 /**
