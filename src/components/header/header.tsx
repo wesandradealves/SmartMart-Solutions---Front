@@ -40,7 +40,7 @@ const Header = () => {
       '/dashboard/minha-conta': '2',
       '/dashboard/categorias': '3',
       '/dashboard/categorias/': '3', 
-      'http://localhost:8000/docs': '4', 
+      '/dashboard/produtos/': '4', 
     };
 
     return routeToKeyMap[pathname] || '1';
@@ -76,9 +76,14 @@ const Header = () => {
             },
             {
               key: '4',
+              icon: <AppstoreOutlined />, 
+              label: <Link href="/dashboard/produtos">Produtos</Link>,
+            }, 
+            {
+              key: '5',
               icon: <FileTextOutlined />,
               label: <Link href="http://localhost:8000/docs">Documentação</Link>,
-            },
+            }, 
           ]}
         />
 
