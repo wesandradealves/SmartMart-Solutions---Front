@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import api from './api';
 import { Product } from '@/app/dashboard/produtos/page';
 
@@ -7,10 +8,6 @@ interface PaginatedResponse<T> {
 }
 
 interface CreateProductRequest {
-    name: string;
-}
-
-interface UpdateProductRequest {
     name: string;
 }
 
@@ -58,19 +55,32 @@ export const createProduct = async (productData: CreateProductRequest): Promise<
 /**
  * Updates an existing product.
  * @param {number} productId - The ID of the product to update.
- * @param {UpdateProductRequest} productData - The data for the updated product.
  * @returns {Promise<Product>} - The updated product.
  */
 export const updateProduct = async (
     productId: number,
-    productData: UpdateProductRequest
+    productData: { name?: string; description?: string; price?: number; category_id?: number; brand?: string }
 ): Promise<Product> => {
+    if (!productData.name && !productData.description && !productData.price && !productData.category_id && !productData.brand) {
+        throw new Error('Nenhum dado foi fornecido para atualização.');
+    }
+
     try {
         const response = await api.put<Product>(`/products/${productId}`, productData);
         return response.data;
     } catch (error) {
-        console.error('Error updating product:', error);
-        throw error;
+        if (error instanceof AxiosError) {
+            if (error.response?.data && Array.isArray(error.response.data)) {
+                const errorMessages = error.response.data.map((err: { msg: string }) => err.msg);
+                console.error('API error:', errorMessages.join(', '));
+                throw new Error(errorMessages.join(', ')); 
+            }
+            console.error('API error:', error.response?.data || error.message);
+            throw new Error(error.response?.data?.message || 'Erro desconhecido ao atualizar o produto');
+        } else {
+            console.error('Unexpected error:', error);
+            throw new Error('Erro inesperado ao atualizar o produto');
+        }
     }
 };
 
