@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { PageTitle } from "@/app/style";
 import CustomSelect from "@/components/CustomSelect/CustomSelect";
 import { useMetadata } from "@/hooks/useMetadata";
+import { exportUsersCSV } from '@/services/csvService';
 
 export interface User {
   id: number;
@@ -18,7 +19,7 @@ export interface User {
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const UsuariosPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<string[]>([]); 
+  const [roles, setRoles] = useState<string[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -67,7 +68,7 @@ const UsuariosPage: React.FC = () => {
 
   useEffect(() => {
     fetchData(1, pagination.pageSize, selectedRole);
-    fetchRolesData(); 
+    fetchRolesData();
   }, [selectedRole]);
 
   const handleDelete = async (userId: number) => {
@@ -99,21 +100,30 @@ const UsuariosPage: React.FC = () => {
 
   const handleCreateUser = async () => {
     try {
-        const values = await form.validateFields();
-        const createdUser = await createUser(values);
-        message.success(`Usuário criado com sucesso: ${createdUser.username}`);
-        setIsModalOpen(false);
-        form.resetFields();
-        fetchData(pagination.current || 1, pagination.pageSize || 10);
+      const values = await form.validateFields();
+      const createdUser = await createUser(values);
+      message.success(`Usuário criado com sucesso: ${createdUser.username}`);
+      setIsModalOpen(false);
+      form.resetFields();
+      fetchData(pagination.current || 1, pagination.pageSize || 10);
     } catch (error) {
-        console.error('Erro ao criar usuário:', error);
-        if (error instanceof Error) {
-            message.error(error.message);
-        } else {
-            message.error('Erro desconhecido ao criar usuário');
-        }
+      console.error('Erro ao criar usuário:', error);
+      if (error instanceof Error) {
+        message.error(error.message);
+      } else {
+        message.error('Erro desconhecido ao criar usuário');
+      }
     }
-};
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      await exportUsersCSV();
+      message.success('Usuários exportados com sucesso');
+    } catch {
+      message.error('Erro ao exportar usuários');
+    }
+  };
 
   const columns = [
     {
@@ -152,7 +162,7 @@ const UsuariosPage: React.FC = () => {
           value={record.role}
           onChange={(value: string | number) => handleFieldChange(record.id, "role", String(value))}
           options={roles.map((role) => ({ value: role, label: role }))}
-          placeholder="Selecione uma role" label={""}        />
+          placeholder="Selecione uma role" label={""} />
       ),
     },
     {
@@ -178,12 +188,10 @@ const UsuariosPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <div>
       <PageTitle className="mb-4 font-bold text-2xl">Usuários</PageTitle>
 
-      <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
-        Cadastrar novo
-      </Button>
+
 
       <Modal
         title="Cadastrar Usuário"
@@ -197,12 +205,12 @@ const UsuariosPage: React.FC = () => {
             label="Username"
             rules={[{ required: true, message: 'Por favor, insira o nome do usuário' }]}
           >
-              <Input
-                  onChange={(e) => {
-                      const value = e.target.value.toLowerCase().replace(/\s+/g, '');
-                      form.setFieldsValue({ username: value });
-                  }}
-              />
+            <Input
+              onChange={(e) => {
+                const value = e.target.value.toLowerCase().replace(/\s+/g, '');
+                form.setFieldsValue({ username: value });
+              }}
+            />
           </Form.Item>
           <Form.Item
             name="email"
@@ -230,24 +238,36 @@ const UsuariosPage: React.FC = () => {
               onChange={(selectedValue) => {
                 setSelectedRole(String(selectedValue));
                 form.setFieldsValue({ role: selectedValue });
-              } } label={""}            />
+              }} label={""} />
           </Form.Item>
         </Form>
       </Modal>
 
-      <div className="mb-4 flex items-center justify-end gap-4">
-        <p className='font-bold text-sm'>Filtrar por</p>
-        <CustomSelect
-          label="Filtrar por Role"
-          placeholder='Selecione uma role'
-          value={selectedRole || ''}
-          onChange={handleRoleChange}
-          options={roles.map((role) => ({
-            value: role,
-            label: role,
-          }))}
-        />
+      <div className='flex justify-end items-center gap-4 mb-4'>
+        <div className="flex items-center justify-end gap-4">
+          <Button type="primary" onClick={() => setIsModalOpen(true)} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+            Cadastrar novo
+          </Button>
+          <Button type="primary" onClick={handleExportCSV} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+            Exportar CSV
+          </Button>
+        </div>
+        <div className="flex items-center justify-end gap-4">
+          <p className='font-bold text-sm'>Filtrar por</p>
+          <CustomSelect
+            label="Filtrar por Role"
+            placeholder='Selecione uma role'
+            value={selectedRole || ''}
+            onChange={handleRoleChange}
+            options={roles.map((role) => ({
+              value: role,
+              label: role,
+            }))}
+          />
+        </div>
       </div>
+
+      {/*  */}
 
       <Table
         columns={columns}
@@ -259,7 +279,7 @@ const UsuariosPage: React.FC = () => {
           fetchData(pagination.current || 1, pagination.pageSize || 10, selectedRole)
         }
       />
-    </>
+    </div>
   );
 };
 

@@ -9,6 +9,7 @@ import { useMetadata } from '@/hooks/useMetadata';
 import { PageTitle } from '@/app/style';
 import CustomSelect from '@/components/CustomSelect/CustomSelect';
 import TextArea from 'antd/es/input/TextArea';
+import { exportProductsCSV, importProductsCSV } from '@/services/csvService';
 
 export interface Product {
     id: number;
@@ -99,15 +100,21 @@ const ProdutosPage = () => {
         setLoading(true);
         try {
             console.log('Fetching products with params:', { page, pageSize, sortField, sortOrder, categoryId });
-            const response = await fetchProducts(page, pageSize, sortField, sortOrder, categoryId); // Usando categoryId diretamente
+            const response = await fetchProducts(page, pageSize, sortField, sortOrder, categoryId);  
             setProducts(response.items);
             setTotal(response.total);
             setPagination((prev) => ({
                 ...prev,
-                current: page,
+                current: Math.max(page, 1), // Garante que o valor de current seja sempre positivo
                 pageSize,
                 total: response.total,
             }));
+
+            if (response.items.length > pageSize) {
+                console.warn(
+                    '[antd: Table] dataSource length is greater than pageSize. Check backend response or frontend logic.'
+                );
+            }
         } catch {
             message.error('Erro ao carregar produtos');
         } finally {
@@ -116,7 +123,7 @@ const ProdutosPage = () => {
     };
 
     useEffect(() => {
-        fetchData(1, 10, 'id', 'asc', null);
+        fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc', null);
     }, []);
 
     useEffect(() => {
@@ -131,13 +138,13 @@ const ProdutosPage = () => {
         loadCategories();
 
         return () => {
-            setCategories([]); 
+            setCategories([]);
         };
     }, []);
 
     useEffect(() => {
         if (selectedCategory !== null) {
-            fetchData(1, pagination.pageSize || 10, 'id', 'asc', selectedCategory);
+            fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc', selectedCategory);
         }
     }, [selectedCategory]);
 
@@ -149,14 +156,10 @@ const ProdutosPage = () => {
         sorter: SorterResult<Product> | SorterResult<Product>[],
         extra: { currentDataSource: Product[] }
     ) => {
-        const sortField = Array.isArray(sorter) ? 'name' : String(sorter.field || 'name');
-        const sortOrder = Array.isArray(sorter)
-            ? 'asc'
-            : sorter.order === 'descend'
-                ? 'desc'
-                : 'asc';
-
-        fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder, selectedCategory);
+        const sortField = !Array.isArray(sorter) && sorter.field ? String(sorter.field) : 'id';
+        const sortOrder = !Array.isArray(sorter) && sorter.order === 'descend' ? 'desc' : 'asc';
+    
+        fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder, selectedCategory);  // Alterado: Passando `pagination.current` e `pagination.pageSize` corretamente
     };
 
     const handleCreate = async () => {
@@ -197,6 +200,15 @@ const ProdutosPage = () => {
         const categoryId = value ? parseInt(value) : null;
         setSelectedCategory(categoryId);
         fetchData(1, pagination.pageSize || 10, 'id', 'asc', categoryId); // Passa o valor atualizado diretamente
+    };
+
+    const handleExportCSV = async (p0?: File) => {
+        try {
+            await exportProductsCSV();
+            message.success('Produtos exportados com sucesso');
+        } catch {
+            message.error('Erro ao exportar produtos');
+        }
     };
 
     const columns = [
@@ -272,12 +284,10 @@ const ProdutosPage = () => {
     ];
 
     return (
-        <>
+        <div>
             <PageTitle className="mb-4 font-bold text-2xl">Produtos</PageTitle>
 
-            <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
-                Cadastrar novo
-            </Button>
+
 
             <Modal
                 title="Cadastrar Produto"
@@ -288,9 +298,38 @@ const ProdutosPage = () => {
                 <ProductForm form={form} categories={categories} />
             </Modal>
 
-            <div className="mb-4 flex items-center justify-end gap-4">
-                <p className='font-bold text-sm'>Filtrar por</p>
-                <CustomSelect
+            <div className='flex justify-end items-center gap-4 mb-4'>
+                <div className="flex items-center justify-end gap-4">
+                    <Button type="primary" onClick={() => setIsModalOpen(true)} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+                        Cadastrar novo
+                    </Button>
+                    <Button type="primary" onClick={() => handleExportCSV()} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+                        Exportar CSV
+                    </Button>
+                    <Button type="primary" onClick={() => document.getElementById('import-csv-input')?.click()} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+                        Importar CSV
+                    </Button>
+                    <input
+                        type="file"
+                        id="import-csv-input"
+                        style={{ display: 'none' }}
+                        accept=".csv"
+                        onChange={async (e) => {
+                            if (e.target.files?.[0]) {
+                                try {
+                                    const messageResponse = await importProductsCSV(e.target.files[0]);
+                                    message.success(messageResponse);
+                                    fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc', selectedCategory);
+                                } catch {
+                                    message.error('Erro ao importar produtos');
+                                }
+                            }
+                        }}
+                    />
+                </div>
+                <div className="flex items-center justify-end gap-4">
+                    <p className='font-bold text-sm'>Filtrar por</p>
+                    <CustomSelect
                         label="Filtrar por Categoria"
                         placeholder='Selecione uma categoria'
                         value={selectedCategory?.toString() || ''}
@@ -300,8 +339,8 @@ const ProdutosPage = () => {
                             label: category.name,
                         }))}
                     />
+                </div>
             </div>
-
 
             <Table
                 columns={columns}
@@ -310,8 +349,9 @@ const ProdutosPage = () => {
                 loading={loading}
                 pagination={pagination}
                 onChange={handleTableChange}
+                key={JSON.stringify(products)} // Força a re-renderização quando os dados mudam
             />
-        </>
+        </div>
     );
 };
 

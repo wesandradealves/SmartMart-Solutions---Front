@@ -8,6 +8,7 @@ import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/
 import { useEffect, useState, useRef } from 'react';
 import { updateProductDiscount } from '@/services/productService';
 import CustomSelect from '@/components/CustomSelect/CustomSelect';
+import { exportCategoriesCSV } from '@/services/csvService';
 
 export interface Category {
   id: number;
@@ -77,7 +78,7 @@ export default function Categories() {
   useEffect(() => {
     fetchData(pagination.current || 1, pagination.pageSize || 2, 'id', 'asc');
   }, []);
-  
+
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const handleTableChange = (
     pagination: TablePaginationConfig,
@@ -89,8 +90,8 @@ export default function Categories() {
     const sortOrder = Array.isArray(sorter)
       ? 'asc'
       : sorter.order === 'descend'
-      ? 'desc'
-      : 'asc';
+        ? 'desc'
+        : 'asc';
 
     fetchData(pagination.current || 1, pagination.pageSize || 2, sortField, sortOrder);
   };
@@ -109,7 +110,7 @@ export default function Categories() {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-  
+
     timeoutRef.current = setTimeout(async () => {
       try {
         if (field === 'name') {
@@ -144,21 +145,21 @@ export default function Categories() {
       }
     }, 1000);
   };
-  
-  
+
+
   const handleDiscountChange = (value: string, categoryId: number) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-  
+
     timeoutRef.current = setTimeout(async () => {
       try {
         const formattedValue = value.replace(',', '.');
         const discount = parseFloat(formattedValue);
-  
+
         if (!isNaN(discount)) {
           const response = await updateProductDiscount(categoryId, discount);
-  
+
           if (response.success) {
             message.success('Desconto atualizado com sucesso');
           } else {
@@ -173,24 +174,33 @@ export default function Categories() {
       }
     }, 1000);
   };
-  
+
   const handleCreate = async () => {
     try {
-        const values = await form.validateFields();
-        const createdCategory = await createCategory(values);
-        message.success(`Categoria criada com sucesso: ${createdCategory.name}`); // Display category name in success message
-        setIsModalOpen(false);
-        form.resetFields();
-        fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
+      const values = await form.validateFields();
+      const createdCategory = await createCategory(values);
+      message.success(`Categoria criada com sucesso: ${createdCategory.name}`); // Display category name in success message
+      setIsModalOpen(false);
+      form.resetFields();
+      fetchData(pagination.current || 1, pagination.pageSize || 2, 'name', 'asc');
     } catch (error) {
-        console.error('Erro ao criar categoria:', error);
-        if (error instanceof Error) {
-            message.error(error.message); // Exibe a mensagem de erro detalhada
-        } else {
-            message.error('Erro desconhecido ao criar categoria');
-        }
+      console.error('Erro ao criar categoria:', error);
+      if (error instanceof Error) {
+        message.error(error.message); // Exibe a mensagem de erro detalhada
+      } else {
+        message.error('Erro desconhecido ao criar categoria');
+      }
     }
-};
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      await exportCategoriesCSV();
+      message.success('Categorias exportadas com sucesso');
+    } catch {
+      message.error('Erro ao exportar categorias');
+    }
+  };
 
   const columns = [
     {
@@ -226,7 +236,7 @@ export default function Categories() {
         <TextArea
           defaultValue={record.description}
           onChange={(e) => handleFieldChange(e.target.value, record.id, 'description')}
-          rows={4} 
+          rows={4}
         />
       ),
     },
@@ -264,11 +274,17 @@ export default function Categories() {
   ];
 
   return (
-    <>
+    <div>
       <PageTitle className='mb-4 font-bold text-2xl'>Categorias</PageTitle>
-      <Button type="primary" onClick={() => setIsModalOpen(true)} className="mb-4 me-auto text-md rounded-none bg-blue-900 font-light flex items-center">
-        Cadastrar nova
-      </Button>
+      <div className='flex justify-end items-center gap-4 mb-4'>
+        <Button type="primary" onClick={() => setIsModalOpen(true)} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+          Cadastrar nova
+        </Button>
+        <Button type="primary" onClick={handleExportCSV} className="text-md rounded-none bg-blue-900 font-light flex items-center">
+          Exportar CSV
+        </Button>
+      </div>
+
       <Table
         columns={columns}
         dataSource={categories}
@@ -312,13 +328,13 @@ export default function Categories() {
             <Input
               type="text"
               onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9.]/g, ''); 
+                const value = e.target.value.replace(/[^0-9.]/g, '');
                 form.setFieldValue('discount_percentage', value);
               }}
             />
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 }
