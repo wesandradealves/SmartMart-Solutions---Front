@@ -47,8 +47,29 @@ export const createProduct = async (productData: CreateProductRequest): Promise<
         const response = await api.post<Product>('/products', productData);
         return response.data;
     } catch (error) {
-        console.error('Error creating product:', error);
-        throw error;
+        if (error instanceof AxiosError) {
+            if (error.response) {
+                const errorDetails = error.response.data;
+                if (Array.isArray(errorDetails)) {
+                    const fieldErrors = errorDetails.map((fieldError: { loc: string[]; msg: string }) => {
+                        const fieldPath = fieldError.loc.join(' -> ');
+                        return `${fieldPath}: ${fieldError.msg}`;
+                    }).join('\n');
+                    throw new Error(fieldErrors);
+                }
+                const errorMessage = errorDetails?.detail || 'Erro desconhecido ao criar o produto';
+                throw new Error(errorMessage);
+            } else if (error.request) {
+                console.error('API Error Request:', error.request);
+                throw new Error('Nenhuma resposta recebida do servidor');
+            } else {
+                console.error('API Error Message:', error.message);
+                throw new Error(error.message);
+            }
+        } else {
+            console.error('Unexpected Error:', error);
+            throw new Error('Erro inesperado ao criar o produto');
+        }
     }
 };
 
@@ -59,9 +80,9 @@ export const createProduct = async (productData: CreateProductRequest): Promise<
  */
 export const updateProduct = async (
     productId: number,
-    productData: { name?: string; description?: string; price?: number; category_id?: number; brand?: string }
+    productData: Partial<{ name: string; description: string; price: number; category_id: number; brand: string }>
 ): Promise<Product> => {
-    if (!productData.name && !productData.description && !productData.price && !productData.category_id && !productData.brand) {
+    if (Object.keys(productData).length === 0) {
         throw new Error('Nenhum dado foi fornecido para atualização.');
     }
 
