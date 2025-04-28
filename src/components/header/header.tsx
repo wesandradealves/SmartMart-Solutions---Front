@@ -39,8 +39,7 @@ const Header = () => {
       '/': '1',
       '/dashboard/minha-conta': '2',
       '/dashboard/categorias': '3',
-      '/dashboard/categorias/': '3', 
-      '/dashboard/produtos/': '4', 
+      '/dashboard/produtos': '4', 
     };
 
     return routeToKeyMap[pathname] || '1';

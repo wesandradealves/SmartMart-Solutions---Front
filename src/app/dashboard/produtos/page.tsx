@@ -1,7 +1,8 @@
 'use client';
 
-import { Table, message, Button, Input, InputNumber } from 'antd';
+import { Table, message, Button, Input, InputNumber, Select } from 'antd';
 import { fetchProducts, deleteProduct, updateProduct } from '@/services/productService';
+import { fetchCategories } from '@/services/categoryService';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState } from 'react';
 import { useMetadata } from '@/hooks/useMetadata';
@@ -29,6 +30,7 @@ const ProdutosPage: React.FC = () => {
         pageSize: 10,
         total: 0,
     });
+    const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
 
     const translationMap: { [key: string]: string } = {
         name: "Nome",
@@ -79,6 +81,21 @@ const ProdutosPage: React.FC = () => {
 
     useEffect(() => {
         fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc');
+    }, []);
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const response = await fetchCategories(1, 100, 'name', 'asc');
+                setCategories(response.items.map((category: { id: number; name: string }) => ({
+                    id: category.id,
+                    name: category.name,
+                })));
+            } catch {
+                message.error('Erro ao carregar categorias');
+            }
+        };
+        loadCategories();
     }, []);
 
     /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -141,10 +158,22 @@ const ProdutosPage: React.FC = () => {
         },
         {
             title: 'Categoria',
-            dataIndex: 'category', 
+            dataIndex: 'category',
             key: 'category',
             sorter: true,
-            render: (_: unknown, record: Product) => record.category.name, 
+            render: (_: unknown, record: Product) => (
+                <div className='relative block'>
+                    <Select
+                        value={record.category_id}
+                        onChange={(value) => handleFieldChange(record.id, 'category_id', value)}
+                        options={categories.map((category) => ({
+                            value: category.id,
+                            label: category.name,
+                        }))}
+                        style={{ width: '100%' }}
+                    />
+                </div>
+            ),
         },
         {
             title: 'Descrição',
