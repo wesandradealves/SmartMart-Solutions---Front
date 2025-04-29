@@ -11,6 +11,7 @@ APP para gerenciamento interno de produtos, categorias e vendas da SmartMart Sol
 2. Insira seu e-mail e senha cadastrados.
 3. Clique no botão "Entrar".
 4. Caso as credenciais estejam corretas, você será redirecionado para o dashboard.
+6. **Login de admin default é: admin/admin**
 
 ## Informações dos Serviços Consumidos
 O frontend consome os seguintes serviços da API:
