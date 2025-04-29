@@ -156,10 +156,13 @@ const ProdutosPage = () => {
         sorter: SorterResult<Product> | SorterResult<Product>[],
         extra: { currentDataSource: Product[] }
     ) => {
-        const sortField = !Array.isArray(sorter) && sorter.field ? String(sorter.field) : 'id';
-        const sortOrder = !Array.isArray(sorter) && sorter.order === 'descend' ? 'desc' : 'asc';
-    
-        fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder, selectedCategory);  // Alterado: Passando `pagination.current` e `pagination.pageSize` corretamente
+        let sortField = 'id';
+        let sortOrder = 'asc';
+        if (!Array.isArray(sorter) && sorter.field) {
+            sortField = String(sorter.field);
+            sortOrder = sorter.order === 'descend' ? 'desc' : 'asc';
+        }
+        fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder, selectedCategory);
     };
 
     const handleCreate = async () => {

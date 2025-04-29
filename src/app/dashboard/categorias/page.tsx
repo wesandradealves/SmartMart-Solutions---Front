@@ -86,14 +86,13 @@ export default function Categories() {
     sorter: SorterResult<Category> | SorterResult<Category>[],
     extra: { currentDataSource: Category[] }
   ) => {
-    const sortField = Array.isArray(sorter) ? 'name' : String(sorter.field || 'name');
-    const sortOrder = Array.isArray(sorter)
-      ? 'asc'
-      : sorter.order === 'descend'
-        ? 'desc'
-        : 'asc';
-
-    fetchData(pagination.current || 1, pagination.pageSize || 2, sortField, sortOrder);
+    let sortField = 'id';
+    let sortOrder = 'asc';
+    if (!Array.isArray(sorter) && sorter.field) {
+      sortField = String(sorter.field);
+      sortOrder = sorter.order === 'descend' ? 'desc' : 'asc';
+    }
+    fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder);
   };
 
   const handleDelete = async (categoryId: number) => {

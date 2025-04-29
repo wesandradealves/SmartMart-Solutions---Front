@@ -24,7 +24,7 @@ const UsuariosPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 10,
+    pageSize: 5,
     total: 0,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -277,7 +277,6 @@ const UsuariosPage: React.FC = () => {
           </Button>
         </div>
         <div className="flex items-center justify-end gap-4">
-          <p className='font-bold text-sm'>Filtrar por</p>
           <CustomSelect
             label="Filtrar por Role"
             placeholder='Selecione uma role'

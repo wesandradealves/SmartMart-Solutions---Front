@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Layout, Button, Menu } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import Link from 'next/link';
-import { DashboardOutlined, FileTextOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { DashboardOutlined, FileTextOutlined, AppstoreOutlined, DollarOutlined } from '@ant-design/icons';
 import Sider from 'antd/es/layout/Sider';
 import { initialState, reducer } from './reducer';
 
@@ -41,6 +41,7 @@ const Header = () => {
       '/dashboard/categorias': '3',
       '/dashboard/produtos': '4',
       '/dashboard/usuarios': '5',
+      '/dashboard/sales': '6',
     };
     return routeToKeyMap[pathname] || '1';
   };
@@ -81,6 +82,11 @@ const Header = () => {
       : null,
     {
       key: '6',
+      icon: <DollarOutlined />,
+      label: <Link href="/dashboard/sales">Vendas</Link>,
+    },
+    {
+      key: '7',
       icon: <FileTextOutlined />,
       label: <Link href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer">Documentação</Link>,
     },
