@@ -299,8 +299,6 @@ const ProdutosPage = () => {
         <div>
             <PageTitle className="mb-4 font-bold text-2xl">Produtos</PageTitle>
 
-
-
             <Modal
                 title="Cadastrar Produto"
                 open={isModalOpen}

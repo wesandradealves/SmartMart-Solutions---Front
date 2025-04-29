@@ -1,6 +1,6 @@
 'use client';
 
-import { Table, message, Button, Input, Modal, Form, TablePaginationConfig } from 'antd';
+import { Table, message, Button, Input, Modal, Form, TablePaginationConfig, FormInstance } from 'antd';
 import type { SorterResult } from 'antd/es/table/interface';
 import type { FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState } from 'react';
@@ -15,14 +15,71 @@ import 'react-datepicker/dist/react-datepicker.css';
 import dayjs from 'dayjs';
 import { useMetadata } from '@/hooks/useMetadata';
 
+const SalesForm = ({
+    form,
+    products,
+    formTotalPrice,
+    handleFormValuesChange,
+}: {
+    form: FormInstance<{ product_id?: number; quantity?: string; date?: string }>;
+    products: { id: number; name: string; price: number }[];
+    formTotalPrice: number;
+    handleFormValuesChange: (
+        changedValues: Record<string, unknown>,
+        allValues: { product_id?: number; quantity?: string }
+    ) => void;
+}) => (
+    <Form<{ product_id?: number; quantity?: string; date?: string }>
+        form={form}
+        layout="vertical"
+        onValuesChange={handleFormValuesChange}
+    >
+        <Form.Item
+            name="product_id"
+            label="Produto"
+            rules={[{ required: true, message: 'Por favor, selecione o produto' }]}
+        >
+            <CustomSelect
+                label="Produto"
+                placeholder="Selecione um produto"
+                value={form.getFieldValue('product_id')?.toString() || ''}
+                onChange={(value) => form.setFieldsValue({ product_id: parseInt(value) })}
+                options={products.map((product) => ({
+                    value: product.id.toString(),
+                    label: product.name,
+                }))}
+            />
+        </Form.Item>
+        <Form.Item
+            name="quantity"
+            label="Quantidade"
+            rules={[{ required: true, message: 'Por favor, insira a quantidade' }]}
+        >
+            <Input type="number" />
+        </Form.Item>
+        <div className="mb-4">
+            <span className="font-bold">Preço Total: </span>
+            <span>{formTotalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+        <Form.Item
+            name="date"
+            label="Data"
+            rules={[{ required: true, message: 'Por favor, insira a data' }]}
+        >
+            <Input type="date" />
+        </Form.Item>
+    </Form>
+);
+
 const SalesPage = () => {
-    const [sales, setSales] = useState<SaleWithProductName[]>([]);
+    const [form] = Form.useForm<{ product_id?: number; quantity?: string; date?: string | undefined }>();
     const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [form] = Form.useForm();
+    // Removed duplicate declaration of 'form'
     const [products, setProducts] = useState<{ id: number; name: string; price: number }[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
+    const [sales, setSales] = useState<SaleWithProductName[]>([]);
     const [formTotalPrice, setFormTotalPrice] = useState<number>(0);
 
     useMetadata({
@@ -96,10 +153,28 @@ const SalesPage = () => {
     const handleCreate = async () => {
         try {
             const values = await form.validateFields();
-            const product = products.find(p => p.id === values.product_id);
-            const quantity = parseFloat(values.quantity);
+            const product = products.find(p => p.id === form.getFieldValue('product_id') as number);
+            const quantity = parseFloat(values.quantity ?? '');
             const total_price = product && !isNaN(quantity) ? product.price * quantity : 0;
-            await createSale({ ...values, total_price });
+            if (values.product_id !== undefined) {
+                if (values.product_id !== undefined) {
+                    if (values.product_id !== undefined) {
+                        await createSale({ 
+                            ...values, 
+                            total_price, 
+                            product_id: values.product_id, 
+                            quantity: parseFloat(values.quantity || '0'), 
+                            date: values.date || '' 
+                        });
+                    } else {
+                        message.error('Produto é obrigatório para criar a venda');
+                    }
+                } else {
+                    message.error('Produto é obrigatório para criar a venda');
+                }
+            } else {
+                message.error('Produto é obrigatório para criar a venda');
+            }
             message.success('Venda criada com sucesso');
             setIsModalOpen(false);
             form.resetFields();
@@ -285,42 +360,12 @@ const SalesPage = () => {
                 onOk={handleCreate}
                 onCancel={() => setIsModalOpen(false)}
             >
-                <Form form={form} layout="vertical" onValuesChange={handleFormValuesChange}>
-                    <Form.Item
-                        name="product_id"
-                        label="Produto"
-                        rules={[{ required: true, message: 'Por favor, selecione o produto' }]}
-                    >
-                        <CustomSelect
-                            label="Produto"
-                            placeholder="Selecione um produto"
-                            value={form.getFieldValue('product_id')?.toString() || ''}
-                            onChange={(value) => form.setFieldsValue({ product_id: parseInt(value) })}
-                            options={products.map((product) => ({
-                                value: product.id.toString(),
-                                label: product.name,
-                            }))}
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="quantity"
-                        label="Quantidade"
-                        rules={[{ required: true, message: 'Por favor, insira a quantidade' }]}
-                    >
-                        <Input type="number" />
-                    </Form.Item>
-                    <div className="mb-4">
-                        <span className="font-bold">Preço Total: </span>
-                        <span>{formTotalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-                    <Form.Item
-                        name="date"
-                        label="Data"
-                        rules={[{ required: true, message: 'Por favor, insira a data' }]}
-                    >
-                        <Input type="date" />
-                    </Form.Item>
-                </Form>
+                <SalesForm
+                    form={form}
+                    products={products}
+                    formTotalPrice={formTotalPrice}
+                    handleFormValuesChange={handleFormValuesChange}
+                />
             </Modal>
         </div>
     );
