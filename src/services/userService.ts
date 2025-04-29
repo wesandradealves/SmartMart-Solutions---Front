@@ -5,6 +5,7 @@ import axios from 'axios';
 interface LoginResponse {
   message: string;
   token: string;
+  username: string; 
 }
 
 /**
@@ -34,11 +35,11 @@ export const loginUser = async (identifier: string, password: string): Promise<L
     : { username: identifier, password };
   try {
     const response = await api.post<LoginResponse>('/users/login', loginData);
-    
+
     if (typeof window !== 'undefined') {
       document.cookie = `session_token=${response.data.token}; path=/; max-age=3600;`;
     }
-    return response.data;
+    return response.data; // Includes username
   } catch (error) {
     console.error('Error during login API call:', error);
     throw error; 

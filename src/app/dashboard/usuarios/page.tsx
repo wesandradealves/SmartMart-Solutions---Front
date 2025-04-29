@@ -118,85 +118,82 @@ const UsuariosPage: React.FC = () => {
 
   const handleExportCSV = async () => {
     try {
-        await exportUsersCSV();
-        message.success('Usuários exportados com sucesso');
+      await exportUsersCSV();
+      message.success('Usuários exportados com sucesso');
     } catch {
-        message.error('Erro ao exportar usuários');
+      message.error('Erro ao exportar usuários');
     }
   };
 
   const columns = [
     {
-        title: "ID",
-        dataIndex: "id",
-        key: "id",
-        sorter: true,
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      sorter: true,
     },
     {
-        title: "E-mail",
-        dataIndex: "email",
-        key: "email",
-        sorter: true,
-        render: (_: unknown, record: User) => (
-            <Input
-                defaultValue={record.email}
-                onBlur={(e) => handleFieldChange(record.id, "email", e.target.value)}
-            />
-        ),
+      title: "E-mail",
+      dataIndex: "email",
+      key: "email",
+      sorter: true,
+      render: (_: unknown, record: User) => (
+        <Input
+          defaultValue={record.email}
+          onBlur={(e) => handleFieldChange(record.id, "email", e.target.value)}
+        />
+      ),
     },
     {
-        title: "Username",
-        dataIndex: "username",
-        key: "username",
-        sorter: true,
-        render: (_: unknown, record: User) => (
-            <Input
-                defaultValue={record.username}
-                onBlur={(e) => handleFieldChange(record.id, "username", e.target.value)}
-            />
-        ),
+      title: "Username",
+      dataIndex: "username",
+      key: "username",
+      sorter: true,
+      render: (_: unknown, record: User) => (
+        <Input
+          defaultValue={record.username}
+          onBlur={(e) => handleFieldChange(record.id, "username", e.target.value)}
+        />
+      ),
     },
     {
-        title: "Role",
-        dataIndex: "role",
-        key: "role",
-        sorter: true,
-        render: (_: unknown, record: User) => (
-            <CustomSelect
-                value={record.role}
-                onChange={(value: string | number) => handleFieldChange(record.id, "role", String(value))}
-                options={roles.map((role) => ({ value: role, label: role }))}
-                placeholder="Selecione uma role" label={""} />
-        ),
+      title: "Role",
+      dataIndex: "role",
+      key: "role",
+      sorter: true,
+      render: (_: unknown, record: User) => (
+        <CustomSelect
+          value={record.role}
+          onChange={(value: string | number) => handleFieldChange(record.id, "role", String(value))}
+          options={roles.map((role) => ({ value: role, label: role }))}
+          placeholder="Selecione uma role" label={""} />
+      ),
     },
     {
-        title: "Ações",
-        key: "actions",
-        render: (_: unknown, record: User) => (
-            <Button
-                type="primary"
-                danger
-                onClick={() =>
-                    Modal.confirm({
-                        title: "Tem certeza que deseja deletar este usuário?",
-                        okText: "Sim",
-                        cancelText: "Não",
-                        onOk: () => handleDelete(record.id),
-                    })
-                }
-            >
-                Deletar
-            </Button>
-        ),
+      title: "Ações",
+      key: "actions",
+      render: (_: unknown, record: User) => (
+        <Button
+          type="primary"
+          danger
+          onClick={() =>
+            Modal.confirm({
+              title: "Tem certeza que deseja deletar este usuário?",
+              okText: "Sim",
+              cancelText: "Não",
+              onOk: () => handleDelete(record.id),
+            })
+          }
+        >
+          Deletar
+        </Button>
+      ),
     },
-];
+  ];
 
   return (
     <div>
       <PageTitle className="mb-4 font-bold text-2xl">Usuários</PageTitle>
-
-
-
       <Modal
         title="Cadastrar Usuário"
         open={isModalOpen}
@@ -261,15 +258,15 @@ const UsuariosPage: React.FC = () => {
             style={{ display: 'none' }}
             accept=".csv"
             onChange={async (e) => {
-                if (e.target.files?.[0]) {
-                    try {
-                        const messageResponse = await importUsersCSV(e.target.files[0]);
-                        message.success(messageResponse);
-                        fetchData(pagination.current || 1, pagination.pageSize || 10);
-                    } catch {
-                        message.error('Erro ao importar usuários');
-                    }
+              if (e.target.files?.[0]) {
+                try {
+                  const messageResponse = await importUsersCSV(e.target.files[0]);
+                  message.success(messageResponse);
+                  fetchData(pagination.current || 1, pagination.pageSize || 10);
+                } catch {
+                  message.error('Erro ao importar usuários');
                 }
+              }
             }}
           />
           <Button
