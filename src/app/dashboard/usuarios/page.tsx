@@ -42,10 +42,10 @@ const UsuariosPage: React.FC = () => {
     fetchData(1, pagination.pageSize || 10, role);
   };
 
-  const fetchData = async (page: number, pageSize: number, role: string | null = null) => {
+  const fetchData = async (page: number, pageSize: number, role: string | null = null, sortField: string = 'username', sortOrder: 'asc' | 'desc' = 'asc') => {
     setLoading(true);
     try {
-      const data = await fetchUsers(page, pageSize, role || undefined);
+      const data = await fetchUsers(page, pageSize, role || undefined, sortField, sortOrder);
       setUsers(data.items);
       setTotal(data.total);
       setPagination({ ...pagination, current: page, total: data.total });
@@ -127,65 +127,69 @@ const UsuariosPage: React.FC = () => {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
+        title: "ID",
+        dataIndex: "id",
+        key: "id",
+        sorter: true,
     },
     {
-      title: "E-mail",
-      dataIndex: "email",
-      key: "email",
-      render: (_: unknown, record: User) => (
-        <Input
-          defaultValue={record.email}
-          onBlur={(e) => handleFieldChange(record.id, "email", e.target.value)}
-        />
-      ),
+        title: "E-mail",
+        dataIndex: "email",
+        key: "email",
+        sorter: true,
+        render: (_: unknown, record: User) => (
+            <Input
+                defaultValue={record.email}
+                onBlur={(e) => handleFieldChange(record.id, "email", e.target.value)}
+            />
+        ),
     },
     {
-      title: "Username",
-      dataIndex: "username",
-      key: "username",
-      render: (_: unknown, record: User) => (
-        <Input
-          defaultValue={record.username}
-          onBlur={(e) => handleFieldChange(record.id, "username", e.target.value)}
-        />
-      ),
+        title: "Username",
+        dataIndex: "username",
+        key: "username",
+        sorter: true,
+        render: (_: unknown, record: User) => (
+            <Input
+                defaultValue={record.username}
+                onBlur={(e) => handleFieldChange(record.id, "username", e.target.value)}
+            />
+        ),
     },
     {
-      title: "Role",
-      dataIndex: "role",
-      key: "role",
-      render: (_: unknown, record: User) => (
-        <CustomSelect
-          value={record.role}
-          onChange={(value: string | number) => handleFieldChange(record.id, "role", String(value))}
-          options={roles.map((role) => ({ value: role, label: role }))}
-          placeholder="Selecione uma role" label={""} />
-      ),
+        title: "Role",
+        dataIndex: "role",
+        key: "role",
+        sorter: true,
+        render: (_: unknown, record: User) => (
+            <CustomSelect
+                value={record.role}
+                onChange={(value: string | number) => handleFieldChange(record.id, "role", String(value))}
+                options={roles.map((role) => ({ value: role, label: role }))}
+                placeholder="Selecione uma role" label={""} />
+        ),
     },
     {
-      title: "Ações",
-      key: "actions",
-      render: (_: unknown, record: User) => (
-        <Button
-          type="primary"
-          danger
-          onClick={() =>
-            Modal.confirm({
-              title: "Tem certeza que deseja deletar este usuário?",
-              okText: "Sim",
-              cancelText: "Não",
-              onOk: () => handleDelete(record.id),
-            })
-          }
-        >
-          Deletar
-        </Button>
-      ),
+        title: "Ações",
+        key: "actions",
+        render: (_: unknown, record: User) => (
+            <Button
+                type="primary"
+                danger
+                onClick={() =>
+                    Modal.confirm({
+                        title: "Tem certeza que deseja deletar este usuário?",
+                        okText: "Sim",
+                        cancelText: "Não",
+                        onOk: () => handleDelete(record.id),
+                    })
+                }
+            >
+                Deletar
+            </Button>
+        ),
     },
-  ];
+];
 
   return (
     <div>
@@ -296,9 +300,17 @@ const UsuariosPage: React.FC = () => {
         rowKey="id"
         loading={loading}
         pagination={pagination}
-        onChange={(pagination) =>
-          fetchData(pagination.current || 1, pagination.pageSize || 10, selectedRole)
-        }
+        onChange={(pagination, filters, sorter) => {
+          const sortField = Array.isArray(sorter) ? sorter[0]?.field : sorter?.field;
+          const sortOrder = Array.isArray(sorter) ? sorter[0]?.order : sorter?.order;
+          fetchData(
+            pagination.current || 1,
+            pagination.pageSize || 10,
+            selectedRole,
+            (typeof sortField === 'string' ? sortField : 'username'),
+            sortOrder === 'descend' ? 'desc' : 'asc'
+          );
+        }}
       />
     </div>
   );
