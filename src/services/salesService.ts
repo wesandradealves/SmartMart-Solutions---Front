@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import api from './api';
 
 export interface SaleWithProductName {
@@ -35,9 +36,34 @@ export const createSale = async (sale: Omit<SaleWithProductName, 'id' | 'product
     return response.data;
 };
 
-export const updateSale = async (saleId: number, sale: Partial<SaleWithProductName>): Promise<SaleWithProductName> => {
-    const response = await api.put<SaleWithProductName>(`/sales/${saleId}`, sale);
-    return response.data;
+interface ApiErrorResponse {
+  detail?: string;
+  [key: string]: unknown;
+}
+
+export const updateSale = async (saleId: number, sale: Partial<SaleWithProductName>): Promise<{ message: string; sale: SaleWithProductName }> => {
+    try {
+        const response = await api.put<{ message: string; sale: SaleWithProductName }>(`/sales/${saleId}`, sale);
+        return response.data;
+    } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'response' in error) {
+            const err = error as AxiosError;
+            console.error('API error:', err.response?.data);
+            throw new Error(
+                (err.response?.data as ApiErrorResponse)?.detail ||
+                (typeof err.response?.data === 'string' ? err.response.data : 'Erro desconhecido ao atualizar venda')
+            );
+        } else if (error && typeof error === 'object' && 'request' in error) {
+            const err = error as AxiosError;
+            console.error('API Error Request:', err.request);
+            throw new Error('Nenhuma resposta recebida do servidor');
+        } else if (error instanceof Error) {
+            console.error('API Error Message:', error.message);
+            throw new Error(error.message);
+        } else {
+            throw new Error('Erro desconhecido ao atualizar venda');
+        }
+    }
 };
 
 export const deleteSale = async (saleId: number): Promise<void> => {

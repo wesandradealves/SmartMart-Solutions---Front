@@ -21,7 +21,7 @@ import { AuthProvider } from '@/context/auth';
 import { LoaderProvider, useLoader } from '@/context/spinner';
 import { setupInterceptors } from '@/services/api';
 import Spinner from '@/components/spinner/spinner';
-
+import 'antd/dist/reset.css'; 
 export default function RootLayout({
   children,
 }: Readonly<{

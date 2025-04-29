@@ -279,12 +279,21 @@ const ProdutosPage = () => {
             title: 'Ações',
             key: 'actions',
             render: (_: unknown, record: Product) => (
-                <Button type="primary" danger onClick={() => handleDelete(record.id)}>
+                <Button type="primary" danger onClick={() => showDeleteConfirm(record.id)}>
                     Deletar
                 </Button>
             ),
         },
     ];
+
+    const showDeleteConfirm = (id: number) => {
+        Modal.confirm({
+            title: 'Tem certeza que deseja deletar este produto?',
+            okText: 'Sim',
+            cancelText: 'Não',
+            onOk: () => handleDelete(id),
+        });
+    };
 
     return (
         <div>

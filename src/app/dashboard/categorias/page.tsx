@@ -7,7 +7,6 @@ import { useMetadata } from '@/hooks/useMetadata';
 import { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState, useRef } from 'react';
 import { updateProductDiscount } from '@/services/productService';
-import CustomSelect from '@/components/CustomSelect/CustomSelect';
 import { exportCategoriesCSV, importCategoriesCSV } from '@/services/csvService';
 
 export interface Category {
@@ -245,14 +244,13 @@ export default function Categories() {
       key: 'discount_percentage',
       sorter: true,
       render: (_: unknown, record: Category) => (
-        <CustomSelect
-          label="Desconto"
-          value={record.discount_percentage.toString()}
-          onChange={(value) => handleDiscountChange(value, record.id)}
-          options={Array.from({ length: 101 }, (_, i) => ({
-            value: i.toString(),
-            label: `${i}%`,
-          }))}
+        <Input
+          type="number"
+          min={0}
+          max={100}
+          step="0.01"
+          defaultValue={record.discount_percentage}
+          onBlur={(e) => handleDiscountChange(e.target.value, record.id)}
         />
       ),
     },
@@ -349,7 +347,10 @@ export default function Categories() {
             ]}
           >
             <Input
-              type="text"
+              type="number"
+              step="0.01"
+              min={0}
+              max={100}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9.]/g, '');
                 form.setFieldValue('discount_percentage', value);

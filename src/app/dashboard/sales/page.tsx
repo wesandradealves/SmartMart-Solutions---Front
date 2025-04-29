@@ -1,13 +1,18 @@
 'use client';
 
 import { Table, message, Button, Input, Modal, Form, TablePaginationConfig } from 'antd';
+import type { SorterResult } from 'antd/es/table/interface';
+import type { FilterValue } from 'antd/es/table/interface';
 import { useEffect, useState } from 'react';
 import { fetchSales, createSale, updateSale, deleteSale, exportSalesCSV, importSalesCSV } from '@/services/salesService';
 import { fetchProducts } from '@/services/productService';
 import CustomSelect from '@/components/CustomSelect/CustomSelect';
 import { PageTitle } from '@/app/style';
-import { ColumnType, FilterValue, SorterResult } from 'antd/es/table/interface';
+import { ColumnType } from 'antd/es/table/interface';
 import type { SaleWithProductName } from '@/services/salesService';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import dayjs from 'dayjs';
 
 const SalesPage = () => {
     const [sales, setSales] = useState<SaleWithProductName[]>([]);
@@ -15,15 +20,20 @@ const SalesPage = () => {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
-    const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
+    const [products, setProducts] = useState<{ id: number; name: string; price: number }[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
+    const [formTotalPrice, setFormTotalPrice] = useState<number>(0);
 
     useEffect(() => {
         fetchData(pagination.current || 1, pagination.pageSize || 2, 'id', 'asc', selectedProduct);
         const loadProducts = async () => {
             try {
                 const response = await fetchProducts(1, 100, 'name', 'asc');
-                setProducts(response.items);
+                setProducts(response.items.map((item: { id: number; name: string; price: number }) => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                })));
             } catch {
                 message.error('Erro ao carregar produtos');
             }
@@ -64,13 +74,30 @@ const SalesPage = () => {
         fetchData(pagination.current || 1, pagination.pageSize || 10, sortField, sortOrder, selectedProduct);
     };
 
+    const handleFormValuesChange = (
+        changedValues: Record<string, unknown>,
+        allValues: { product_id?: number; quantity?: string }
+    ) => {
+        const product = products.find(p => p.id === allValues.product_id);
+        const quantity = parseFloat(allValues.quantity ?? '');
+        if (product && !isNaN(quantity)) {
+            setFormTotalPrice(product.price * quantity);
+        } else {
+            setFormTotalPrice(0);
+        }
+    };
+
     const handleCreate = async () => {
         try {
             const values = await form.validateFields();
-            await createSale(values);
+            const product = products.find(p => p.id === values.product_id);
+            const quantity = parseFloat(values.quantity);
+            const total_price = product && !isNaN(quantity) ? product.price * quantity : 0;
+            await createSale({ ...values, total_price });
             message.success('Venda criada com sucesso');
             setIsModalOpen(false);
             form.resetFields();
+            setFormTotalPrice(0);
             fetchData(pagination.current || 1, pagination.pageSize || 2, 'id', 'asc');
         } catch {
             message.error('Erro ao criar venda');
@@ -96,6 +123,15 @@ const SalesPage = () => {
         }
     };
 
+    const showDeleteConfirm = (id: number) => {
+        Modal.confirm({
+            title: 'Tem certeza que deseja deletar esta venda?',
+            okText: 'Sim',
+            cancelText: 'Não',
+            onOk: () => handleDelete(id),
+        });
+    };
+
     const columns: Array<ColumnType<SaleWithProductName>> = [
         {
             title: 'ID',
@@ -119,8 +155,20 @@ const SalesPage = () => {
             sorter: true,
             render: (_: unknown, record: SaleWithProductName) => (
                 <Input
+                    type="number"
                     defaultValue={record.quantity}
-                    onBlur={(e) => updateSale(record.id, { quantity: parseFloat(e.target.value) })}
+                    onBlur={async (e) => {
+                        const newQuantity = parseFloat(e.target.value);
+                        const product = products.find(p => p.id === record.product_id);
+                        if (!product) {
+                            message.error('Produto não encontrado');
+                            return;
+                        }
+                        const total_price = product.price * newQuantity;
+                        const result = await updateSale(record.id, { quantity: newQuantity, total_price });
+                        message.success(result.message);
+                        fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc', selectedProduct);
+                    }}
                 />
             ),
         },
@@ -130,10 +178,7 @@ const SalesPage = () => {
             key: 'total_price',
             sorter: true,
             render: (_: unknown, record: SaleWithProductName) => (
-                <Input
-                    defaultValue={record.total_price}
-                    onBlur={(e) => updateSale(record.id, { total_price: parseFloat(e.target.value) })}
-                />
+                <span>{Number(record.total_price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             ),
         },
         {
@@ -141,12 +186,26 @@ const SalesPage = () => {
             dataIndex: 'date',
             key: 'date',
             sorter: true,
+            render: (_: unknown, record: SaleWithProductName) => (
+                <DatePicker
+                    showTimeSelect
+                    selected={record.date ? dayjs(record.date).toDate() : null}
+                    dateFormat="yyyy-MM-dd'T'HH:mm:ss"
+                    onChange={async (date: Date | null) => {
+                        if (!date) return;
+                        const formattedDate = dayjs(date).format('YYYY-MM-DDTHH:mm:ss');
+                        const result = await updateSale(record.id, { date: formattedDate });
+                        message.success(result.message);
+                        fetchData(pagination.current || 1, pagination.pageSize || 10, 'id', 'asc', selectedProduct);
+                    }}
+                />
+            ),
         },
         {
             title: 'Ações',
             key: 'actions',
             render: (_: unknown, record: SaleWithProductName) => (
-                <Button type="primary" danger onClick={() => handleDelete(record.id)}>
+                <Button type="primary" danger onClick={() => showDeleteConfirm(record.id)}>
                     Deletar
                 </Button>
             ),
@@ -215,28 +274,34 @@ const SalesPage = () => {
                 onOk={handleCreate}
                 onCancel={() => setIsModalOpen(false)}
             >
-                <Form form={form} layout="vertical">
+                <Form form={form} layout="vertical" onValuesChange={handleFormValuesChange}>
                     <Form.Item
                         name="product_id"
-                        label="ID do Produto"
-                        rules={[{ required: true, message: 'Por favor, insira o ID do produto' }]}
+                        label="Produto"
+                        rules={[{ required: true, message: 'Por favor, selecione o produto' }]}
                     >
-                        <Input />
+                        <CustomSelect
+                            label="Produto"
+                            placeholder="Selecione um produto"
+                            value={form.getFieldValue('product_id')?.toString() || ''}
+                            onChange={(value) => form.setFieldsValue({ product_id: parseInt(value) })}
+                            options={products.map((product) => ({
+                                value: product.id.toString(),
+                                label: product.name,
+                            }))}
+                        />
                     </Form.Item>
                     <Form.Item
                         name="quantity"
                         label="Quantidade"
                         rules={[{ required: true, message: 'Por favor, insira a quantidade' }]}
                     >
-                        <Input />
+                        <Input type="number" />
                     </Form.Item>
-                    <Form.Item
-                        name="total_price"
-                        label="Preço Total"
-                        rules={[{ required: true, message: 'Por favor, insira o preço total' }]}
-                    >
-                        <Input />
-                    </Form.Item>
+                    <div className="mb-4">
+                        <span className="font-bold">Preço Total: </span>
+                        <span>{formTotalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
                     <Form.Item
                         name="date"
                         label="Data"
