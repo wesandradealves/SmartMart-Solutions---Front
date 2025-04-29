@@ -13,6 +13,7 @@ import type { SaleWithProductName } from '@/services/salesService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import dayjs from 'dayjs';
+import { useMetadata } from '@/hooks/useMetadata';
 
 const SalesPage = () => {
     const [sales, setSales] = useState<SaleWithProductName[]>([]);
@@ -23,6 +24,11 @@ const SalesPage = () => {
     const [products, setProducts] = useState<{ id: number; name: string; price: number }[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
     const [formTotalPrice, setFormTotalPrice] = useState<number>(0);
+
+    useMetadata({
+        title: `SmartMart - Sales`,
+        ogTitle: `SmartMart - Sales`,
+    });
 
     useEffect(() => {
         fetchData(pagination.current || 1, pagination.pageSize || 2, 'id', 'asc', selectedProduct);
@@ -212,6 +218,10 @@ const SalesPage = () => {
         },
     ];
 
+    if (!form) {
+        return null;
+    }
+
     return (
         <div>
             <PageTitle className="mb-4 font-bold text-2xl">Sales</PageTitle>
@@ -268,6 +278,7 @@ const SalesPage = () => {
                 pagination={pagination}
                 onChange={handleTableChange}
             />
+            
             <Modal
                 title="Cadastrar Venda"
                 open={isModalOpen}
