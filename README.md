@@ -1,5 +1,11 @@
 # SmartMart Frontend
 
+APP para gerenciamento interno de produtos, categorias e vendas da SmartMart Solutions.
+
+- Frontend [https://github.com/wesandradealves/SmartMart-Solutions---Front](https://github.com/wesandradealves/SmartMart-Solutions---Front) 
+
+- Backend [https://github.com/wesandradealves/SmartMart-Solutions](https://github.com/wesandradealves/SmartMart-Solutions) 
+
 ## Como Fazer Login
 1. Acesse a página de login em `/login`.
 2. Insira seu e-mail e senha cadastrados.
