@@ -9,10 +9,11 @@ import Link from 'next/link';
 import { DashboardOutlined, FileTextOutlined, AppstoreOutlined, DollarOutlined } from '@ant-design/icons';
 import Sider from 'antd/es/layout/Sider';
 import { initialState, reducer } from './reducer';
+import classNames from 'classnames';
 
 const { Header: AntHeader } = Layout;
 
-const Header = () => {
+const Header = (props: {className?: string}) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { isAuthenticated, logoutUser, userRole } = useAuthActions();
   const router = useRouter();
@@ -93,8 +94,12 @@ const Header = () => {
   ].filter((item) => item !== null);
 
   return (
-    <Sider style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <AntHeader className="w-full px-2 py-4 h-screen overflow-auto gap-4 flex flex-col bg-white">
+    <Sider 
+        className={classNames(
+          `flex flex-col justify-between`,
+          [props.className]
+        )}>
+      <AntHeader className="w-full px-2 py-4 h-[100%] overflow-auto gap-4 flex flex-col bg-white">
         <Link href="/">
           <LazyLoadImage className="w-full" src="/logo.png" alt="Logo" />
         </Link>
