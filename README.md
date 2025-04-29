@@ -1,40 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SmartMart Frontend
 
-## Getting Started
+## Como Fazer Login
+1. Acesse a página de login em `/login`.
+2. Insira seu e-mail e senha cadastrados.
+3. Clique no botão "Entrar".
+4. Caso as credenciais estejam corretas, você será redirecionado para o dashboard.
 
-- Frontend [https://github.com/wesandradealves/SmartMart-Solutions---Front](https://github.com/wesandradealves/SmartMart-Solutions---Front) 
+## Informações dos Serviços Consumidos
+O frontend consome os seguintes serviços da API:
+- **Autenticação**: Gerencia login e logout dos usuários.
+- **Usuários**: Gerencia informações de usuários, como criação, edição e listagem.
+- **Produtos**: Permite visualizar, criar, editar e excluir produtos.
+- **Vendas**: Gerencia o histórico de vendas e relatórios.
+- **Categorias**: Gerencia categorias de produtos.
 
-- Backend [https://github.com/wesandradealves/SmartMart-Solutions](https://github.com/wesandradealves/SmartMart-Solutions) 
+Os serviços são configurados no diretório `src/services` e utilizam a biblioteca `axios` para requisições HTTP.
 
-First, run the development server:
+## Funcionalidades Importantes
+- **Autenticação**: Proteção de rotas com middleware e redirecionamento de usuários não autenticados.
+- **Dashboard**: Exibe informações resumidas e permite navegação para diferentes seções, como produtos, vendas e usuários.
+- **Gerenciamento de Produtos**: Criação, edição e exclusão de produtos.
+- **Gerenciamento de Usuários**: Controle de permissões e gerenciamento de contas.
+- **Relatórios de Vendas**: Visualização de histórico e relatórios detalhados.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Dependências Necessárias
+Certifique-se de instalar as seguintes dependências antes de rodar o projeto:
+- Node.js (versão 18 ou superior)
+- Docker e Docker Compose
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+As dependências do projeto estão listadas no arquivo `package.json` e incluem bibliotecas como:
+- `react`
+- `next`
+- `axios`
+- `tailwindcss`
+- `styled-components`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Como Rodar com o Docker
+1. Certifique-se de que o Docker e o Docker Compose estão instalados.
+2. Configure as variáveis de ambiente no arquivo `.env`.
+3. Execute o comando abaixo para iniciar o container:
+   ```bash
+   docker-compose up --build
+   ```
+4. Acesse o aplicativo no navegador em `http://localhost:3000`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts Disponíveis
+- `npm run dev`: Inicia o servidor de desenvolvimento.
+- `npm run build`: Gera a build de produção.
+- `npm run start`: Inicia o servidor em modo de produção.
+- `npm run lint`: Executa o linter para verificar problemas no código.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estrutura do Projeto
+- **src/app/login**: Contém a página de login.
+- **src/app/dashboard**: Contém o dashboard principal e suas subpáginas.
+- **src/services**: Configuração dos serviços consumidos pela API.
+- **src/hooks**: Hooks customizados, como `useAuthActions` para autenticação.
+- **src/middleware.ts**: Middleware para proteção de rotas e controle de acesso.
