@@ -6,6 +6,8 @@ APP para gerenciamento interno de produtos, categorias e vendas da SmartMart Sol
 
 - Backend [https://github.com/wesandradealves/SmartMart-Solutions](https://github.com/wesandradealves/SmartMart-Solutions) 
 
+- Postman Collection [https://raw.githubusercontent.com/wesandradealves/SmartMart-Solutions/refs/heads/master/SmartMart%20API.postman_collection.json] (https://raw.githubusercontent.com/wesandradealves/SmartMart-Solutions/refs/heads/master/SmartMart%20API.postman_collection.json)
+
 ## Como Fazer Login
 1. Acesse a página de login em `/login`.
 2. Insira seu e-mail e senha cadastrados.
