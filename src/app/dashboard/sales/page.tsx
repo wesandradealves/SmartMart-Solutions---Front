@@ -76,7 +76,6 @@ const SalesPage = () => {
     const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // Removed duplicate declaration of 'form'
     const [products, setProducts] = useState<{ id: number; name: string; price: number }[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
     const [sales, setSales] = useState<SaleWithProductName[]>([]);
