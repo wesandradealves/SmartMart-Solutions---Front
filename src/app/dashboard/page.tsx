@@ -133,16 +133,16 @@ export default function Home() {
       <div className="text-sm font-medium mb-4">
         Bem Vindo, {clientUser || "Usuário"}
       </div>
-      <div className="grid grid-cols-2 gap-4 p-2">
-        <div className="bg-white p-4 shadow rounded">
+      <div className="grid xl:grid-cols-2 gap-4 p-2">
+        <div className="bg-white p-4 shadow rounded overflow-hidden">
           <GridTitle className="text-lg font-bold mb-4">Vendas</GridTitle>
           <Bar {...salesConfig} />
         </div>
-        <div className="bg-white p-4 shadow rounded">
+        <div className="bg-white p-4 shadow rounded overflow-hidden">
           <GridTitle className="text-lg font-bold mb-4">Lucro</GridTitle>
           <Bar {...profitConfig} />
         </div>
-        <div className="bg-white p-4 shadow rounded">
+        <div className="bg-white p-4 shadow rounded overflow-hidden">
           <GridTitle className="text-lg font-bold mb-4">Produtos</GridTitle>
           <Table
             columns={productColumns}
